@@ -4,48 +4,122 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Modality Clarity Guide · Method Alchemy Challenge</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { min-height: 100vh; }
+    body { min-height: 100vh; background: #F5EDE0; }
     #root { min-height: 100vh; }
-    .f-cin { font-family: 'Cinzel Decorative', serif; }
-    .f-play { font-family: 'Playfair Display', serif; }
-    .f-mont { font-family: 'Montserrat', sans-serif; }
-    .c-deep { color: #0E3D3D; }
-    .c-plum { color: #7A5B6E; }
-    .c-terra { color: #B86A48; }
-    .c-sage { color: #7D8F83; }
-    .c-gold { color: #C7A05A; }
+    .f-cin { font-family: 'Cormorant Garamond', serif; }
+    .f-play { font-family: 'Cormorant Garamond', serif; }
+    .f-mont { font-family: 'Hanken Grotesk', sans-serif; }
+    .f-mono { font-family: 'JetBrains Mono', monospace; }
+    .c-deep { color: #2A211A; }
+    .c-plum { color: #5C4F3E; }
+    .c-terra { color: #C4571F; }
+    .c-sage { color: #2C5F5A; }
+    .c-gold { color: #A8892E; }
+
+    @keyframes shimmer {
+      0%   { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @keyframes float-ember {
+      0%   { transform: translateY(0) scale(1); opacity: 0; }
+      10%  { opacity: 0.5; }
+      90%  { opacity: 0.35; }
+      100% { transform: translateY(-120vh) scale(0.3); opacity: 0; }
+    }
+
+    @keyframes drift-orb {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(12px, -18px) scale(1.04); }
+      66%      { transform: translate(-8px, 10px) scale(0.97); }
+    }
+
+    .shimmer-title {
+      background: linear-gradient(100deg,
+        #7D5A2F 0%, #C4571F 35%, #A8892E 60%, #7A5D6B 85%, #9A6F3E 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 8s linear infinite alternate;
+    }
+
+    .ember-particle {
+      position: fixed;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #C6955C;
+      box-shadow: 0 0 6px 1px rgba(154,111,62,0.4);
+      pointer-events: none;
+      z-index: 0;
+      animation: float-ember 8s linear forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .shimmer-title { animation: none; }
+      .ember-particle { display: none !important; }
+      .orb-ambient { display: none !important; }
+      * { transition: none !important; }
+    }
   </style>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
-/* ── shared style fragments ── */
+/* ── shared style fragments — FORGE AT DAWN ── */
 const S = {
-  cin: "'Cinzel Decorative', serif",
-  play: "'Playfair Display', serif",
-  mont: "'Montserrat', sans-serif",
-  deep: "#0E3D3D",
-  plum: "#7A5B6E",
-  terra: "#B86A48",
-  sage: "#7D8F83",
-  gold: "#C7A05A",
-  teal: "#0E3D3D",
-  parch: "rgba(243,233,218",
-  mist: "rgba(14,61,61",
+  serif: "'Cormorant Garamond', serif",
+  sans: "'Hanken Grotesk', sans-serif",
+  mono: "'JetBrains Mono', monospace",
+  /* backward-compat aliases used throughout JSX */
+  cin: "'Cormorant Garamond', serif",
+  play: "'Cormorant Garamond', serif",
+  mont: "'Hanken Grotesk', sans-serif",
+  /* ink */
+  deep: "#2A211A",
+  plum: "#5C4F3E",
+  faint: "#8A7D6C",
+  /* accents */
+  copper: "#9A6F3E",
+  copperLt: "#7D5A2F",
+  copperDk: "#6B4A24",
+  terra: "#C4571F",
+  emberGlow: "#D96A2B",
+  sage: "#2C5F5A",
+  forestLt: "#1F4A45",
+  mauve: "#7A5D6B",
+  mauveLt: "#967A88",
+  gold: "#A8892E",
+  /* surfaces */
+  bg: "#F5EDE0",
+  bg2: "#EDE3D3",
+  bg3: "#E8DCCA",
+  parch: "rgba(255,252,247",
+  mist: "rgba(42,33,26",
+  surface: "rgba(255,252,247,0.78)",
+  /* lines */
+  line: "rgba(154,111,62,0.22)",
+  line2: "rgba(42,33,26,0.09)",
+  /* shadows */
+  shadow: "0 10px 36px rgba(42,33,26,0.10)",
+  glowCopper: "0 0 24px rgba(154,111,62,0.18)",
+  btnText: "#FFFCF7",
+  teal: "#2A211A",
 };
 
 /* ── DATA ── */
 const MODALITIES = [
   {
-    id:"tarot", canFill:["Symbolic Mirror"], name:"Tarot & Oracle Cards", icon:"✦", color:"#7D8F83",
+    id:"tarot", canFill:["Symbolic Mirror"], name:"Tarot & Oracle Cards", icon:"✦", color:"#2C5F5A",
     tagline:"Your Soul's Visual Vocabulary",
     core:{ title:"Reveal What Is Already Known", description:"Tarot creates a visual, symbolic language for what the client senses but cannot yet articulate. The session transforms unspoken intuition into a visible map. The cards reflect what is already alive inside the client. The transformation is recognition." },
     role:{ title:"Archetypal Mirror", unique:"Tarot is the only modality that externalizes the client's inner landscape into a shared visual field. It bypasses the analytical mind and speaks directly to pattern, archetype, and symbol. Where coaching asks \"what do you think?\", tarot asks \"what do you see?\" This shift from linear thinking to symbolic seeing unlocks insight that logic alone cannot reach." },
@@ -57,7 +131,7 @@ const MODALITIES = [
     integration:{ practices:["Photograph the spread and journal about which card felt most alive","Carry a single card's message as a daily intention for the week","Notice where the card's archetype shows up in everyday life","Return to the reading before the next session and note what shifted","Share one insight or action taken from the reading with the practitioner before the next session"] }
   },
   {
-    id:"coaching", canFill:["Strategic Conversation"], name:"Coaching Conversation", icon:"◈", color:"#7A5B6E",
+    id:"coaching", canFill:["Strategic Conversation"], name:"Coaching Conversation", icon:"◈", color:"#7A5D6B",
     tagline:"The Bridge Between Knowing and Doing",
     core:{ title:"Move From Awareness to Action", description:"Coaching transforms insight into commitment. It holds space for the client to hear their own wisdom, name their own blocks, and choose their own next step. The session builds the client's capacity to trust themselves enough to act." },
     role:{ title:"Accountability & Agency Activator", unique:"Coaching is the only modality that centers the client's own voice as the primary instrument of change. It asks them to speak, choose, and commit. Where tarot interprets, energy work moves, and meditation quiets, coaching activates agency. This is where insight becomes decision and decision becomes momentum." },
@@ -69,7 +143,7 @@ const MODALITIES = [
     integration:{ practices:["Write down the one commitment made in session within 24 hours","Set a calendar reminder for the specific action step chosen","Text or message the practitioner when the step is taken","Begin next session by reporting what happened with the commitment","Name one person in their life who can hold them to the action between sessions"] }
   },
   {
-    id:"energy", canFill:["Energetic Reset"], name:"Energy Work", icon:"❋", color:"#B86A48",
+    id:"energy", canFill:["Energetic Reset"], name:"Energy Work", icon:"❋", color:"#C4571F",
     tagline:"The Reset Your Nervous System Has Been Asking For",
     core:{ title:"Restore Flow Where There Is Stagnation", description:"Energy work addresses what the body holds but the mind has not yet named. It shifts the nervous system, clears emotional residue, and creates spaciousness where there was contraction. The transformation is felt before it is understood." },
     role:{ title:"Somatic & Energetic Reset", unique:"Energy work is the only modality that operates primarily below the threshold of conscious thought. It meets the client exactly where they are, in the body, and creates movement at the level of sensation and energetic pattern. This makes it irreplaceable for clients who are stuck in loops of overthinking or emotional shutdown." },
@@ -81,7 +155,7 @@ const MODALITIES = [
     integration:{ practices:["Rest and hydrate for the remainder of the day","Notice physical sensations and emotions that arise in the 48 hours after","Journal about what felt different in the body during the session","Bring those observations to the next session as data","Check in with the practitioner at a set point (48 or 72 hours) to share what emerged"] }
   },
   {
-    id:"somatic", canFill:["Grounding Anchor","Somatic Intelligence"], name:"Somatic & Breathwork", icon:"◉", color:"#7D8F83",
+    id:"somatic", canFill:["Grounding Anchor","Somatic Intelligence"], name:"Somatic & Breathwork", icon:"◉", color:"#1F4A45",
     tagline:"The Intelligence Your Body Has Been Holding",
     core:{ title:"Reconnect Awareness to the Body's Intelligence", description:"Somatic work and breathwork bring the client out of cognitive loops and into direct physical experience. The session transforms disconnection into presence. The body becomes a source of information, a teacher the mind has been talking over." },
     role:{ title:"Embodied Awareness Activator", unique:"Somatic and breathwork are the only modalities where the client's own physical body is both the tool and the teacher. Unlike energy work (where the practitioner may direct the shift), somatic practice asks the client to become the active participant in their own regulation. This builds long-term nervous system resilience and self-trust that outlasts the session." },
@@ -93,7 +167,7 @@ const MODALITIES = [
     integration:{ practices:["Practice the specific breath pattern taught in session for 5 minutes daily","Do a 60-second body scan each morning before checking the phone","Notice and name one physical sensation per day connected to an emotion","Use the breath technique before any high-stakes conversation or decision","Report back to the practitioner on which practice they used and what they noticed"] }
   },
   {
-    id:"journaling", canFill:["Written Witness"], name:"Journaling & Reflective Writing", icon:"✧", color:"#C7A05A",
+    id:"journaling", canFill:["Written Witness"], name:"Journaling & Reflective Writing", icon:"✧", color:"#A8892E",
     tagline:"The Record That Tracks Your Becoming",
     core:{ title:"Make the Internal External and Visible", description:"Journaling transforms the swirl of inner experience into something the client can see, touch, and revisit. Writing slows the mind enough to catch what speed hides. The transformation lives in the moment the client reads back what they wrote and recognizes their own truth on the page." },
     role:{ title:"Self-Witness & Pattern Tracker", unique:"Journaling is the only modality that creates a permanent, revisitable record of the client's inner world over time. Unlike a conversation (which fades) or an energetic shift (which integrates invisibly), the written word stays. This makes it the most powerful tool for tracking patterns, measuring growth, and building the client's confidence in their own evolution." },
@@ -105,7 +179,7 @@ const MODALITIES = [
     integration:{ practices:["Re-read the session journal entry 3 days later and highlight what still resonates","Continue the prompt at home if it felt unfinished","Bring the journal to the next session as a starting point","Create a 'wisdom log' of recurring themes across entries","Send the practitioner one sentence from their journal that captured the session's core truth"] }
   },
   {
-    id:"meditation", canFill:["Grounding Anchor","Inner Vision"], name:"Meditation & Visualization", icon:"◐", color:"#0E3D3D",
+    id:"meditation", canFill:["Grounding Anchor","Inner Vision"], name:"Meditation & Visualization", icon:"◐", color:"#6B4A24",
     tagline:"The Space Where Receiving Begins",
     core:{ title:"Access the Layer Beneath the Noise", description:"Meditation and visualization create a container of stillness where the client can receive fully. The session transforms reactivity into receptivity. In the quiet, the client's deeper knowing has room to arrive without being edited by the thinking mind." },
     role:{ title:"Receptivity & Inner Vision Opener", unique:"Meditation is the only modality that asks the client to stop doing entirely. Every other modality involves some form of engagement: pulling cards, answering questions, writing, breathing with intention. Meditation invites the client into a space of pure receiving. Visualization adds a creative layer, allowing the client to rehearse, manifest, or explore futures and inner landscapes without the constraints of reality." },
@@ -117,7 +191,7 @@ const MODALITIES = [
     integration:{ practices:["Practice the specific meditation or visualization daily for one week","Record the guided visualization and replay it between sessions","Notice what images or phrases from the visualization recur in daily life","Journal immediately after each practice to capture what arrived","Commit to a specific number of practice days and report completion to the practitioner"] }
   },
   {
-    id:"astrology", canFill:["Cosmic Context","Symbolic Mirror"], name:"Astrology & Birth Chart", icon:"☽", color:"#7A5B6E",
+    id:"astrology", canFill:["Cosmic Context","Symbolic Mirror"], name:"Astrology & Birth Chart", icon:"☽", color:"#967A88",
     tagline:"The Cosmic Context for Your Season",
     core:{ title:"Contextualize the Self Within a Larger Pattern", description:"Astrology offers the client a framework for understanding their tendencies, gifts, and growth edges through the lens of cosmic timing and natal imprint. The session transforms self-judgment into self-recognition. What felt like a flaw becomes a feature when seen through the chart." },
     role:{ title:"Cosmic Context & Timing Guide", unique:"Astrology is the only modality that places the client within a larger temporal and archetypal framework they did not create and cannot control. It offers the validation of 'this is bigger than you' in a way that relieves pressure and restores perspective. It also provides timing intelligence. Knowing that a Saturn return is in effect or a Venus retrograde is approaching changes how the practitioner frames the work." },
@@ -129,7 +203,7 @@ const MODALITIES = [
     integration:{ practices:["Track the moon phases for one full cycle and notice personal energy patterns","Journal about how the highlighted transit is showing up in daily life","Revisit the natal chart insight before making the specific decision discussed","Set a calendar reminder for the transit date mentioned and check back in","Share one observation about how the transit played out before the next session"] }
   },
   {
-    id:"ritual", canFill:["Sacred Container"], name:"Ritual & Ceremony", icon:"◆", color:"#B86A48",
+    id:"ritual", canFill:["Sacred Container"], name:"Ritual & Ceremony", icon:"◆", color:"#9A6F3E",
     tagline:"The Sacred Punctuation Mark",
     core:{ title:"Mark the Threshold and Make Transformation Tangible", description:"Ritual creates a physical, sensory container for what is happening in the inner world. It transforms the abstract into the embodied. When a client lights a candle, speaks an intention aloud, or releases a written fear into fire, the body registers the shift in a way that conversation alone cannot achieve." },
     role:{ title:"Threshold Marker & Symbolic Anchor", unique:"Ritual is the only modality that uses physical action and symbolic gesture to mark transformation. It engages the senses (sight, smell, touch, sound) and creates a felt boundary between before and after. This is what makes it irreplaceable for closings, new beginnings, and any moment where the client needs to feel the shift in their bones." },
@@ -143,7 +217,7 @@ const MODALITIES = [
 ];
 
 const SIGNATURE_FRAMEWORK = [
-  { num:"01", title:"Transformation", subtitle:"Name the core shift your method is designed to create.", color:"#7D8F83",
+  { num:"01", title:"Transformation", subtitle:"Name the core shift your method is designed to create.", color:"#2C5F5A",
     teaching:"Every session you hold carries a promise, even if you have never spoken it aloud. The transformation is that promise made visible. It is the reason a client sits down with you instead of reading a book or watching a video. When you can name the shift clearly, everything else in your method has something to serve. When you cannot, every modality you use floats without an anchor.",
     questions:["What does the client walk in carrying, and what do they walk out holding instead?","If this transformation landed fully, what would be different in the client's life one week from now?","What is the emotional signature of this shift? (relief, clarity, courage, permission, release, recognition)","Can you say the transformation in one sentence that a client would feel in their body?","What is the throughline that connects every element of this session back to this shift?"],
     principles:[
@@ -151,7 +225,7 @@ const SIGNATURE_FRAMEWORK = [
       { title:"Trust Your Intuitive Nudges", description:"If something in you says pull a card here or pause and breathe, listen. Your intuition as a practitioner is a modality in itself. The framework gives you structure. Your felt sense gives you timing. The practitioners who create the most transformative sessions are the ones who know the principles well enough to break them when the moment asks for it." }
     ]
   },
-  { num:"02", title:"Roles", subtitle:"Give each modality a clear, earned job inside the transformation.", color:"#7A5B6E",
+  { num:"02", title:"Roles", subtitle:"Give each modality a clear, earned job inside the transformation.", color:"#7A5D6B",
     teaching:"A modality earns its place by doing something the other modalities in the session cannot. If two modalities serve the same function, one of them is redundant. The practitioner who can articulate why each piece belongs builds a method with integrity. The practitioner who adds modalities because they are trained in them builds a method that serves their resume. The client can feel the difference.",
     questions:["What specific job does each modality hold inside this session?","What does this modality reveal, support, or activate that the others cannot?","If you removed this modality entirely, what would be missing from the client's experience?","Is this modality here because it serves the transformation, or because it is familiar to you?","What is the relationship between your modalities? Do they build on each other, hold space for each other, or create contrast?","Which modality carries the spine of the session, and which ones support it?"],
     principles:[
@@ -159,7 +233,7 @@ const SIGNATURE_FRAMEWORK = [
       { title:"Be Intentional With Layering", description:"Every modality you add to a session should have a clear role in the transformation. A workshop with an astrology frame that weaves in meditation, journaling, and ritual can be deeply powerful because each element serves the container. The question is always: does this modality earn its place here, or am I adding it out of habit? If every element has a purpose, the session holds. If even one is there without a reason, it dilutes the rest." }
     ]
   },
-  { num:"03", title:"Sequence", subtitle:"Design the order that helps the transformation land in the client's body.", color:"#B86A48",
+  { num:"03", title:"Sequence", subtitle:"Design the order that helps the transformation land in the client's body.", color:"#C4571F",
     teaching:"Sequence is where your method becomes an experience instead of a list. The same three modalities in a different order create an entirely different session. A session that opens with coaching and closes with meditation creates a landing. A session that opens with meditation and closes with coaching creates momentum. Neither is wrong. Both are intentional. The question is always: what does this client need to feel first in order to receive what comes next?",
     questions:["What state does the client need to arrive in before the core work can begin?","Which modality creates the opening, and what does 'open' mean in this specific session?","Where is the deepest point of the session, and what modality holds that moment?","What does each transition ask the client to do? (shift from feeling to thinking, from receiving to acting, from stillness to expression)","What is the emotional arc from the first moment to the last?","Does the closing modality create integration, completion, or both?"],
     principles:[
@@ -167,14 +241,14 @@ const SIGNATURE_FRAMEWORK = [
       { title:"Intuitive Before Analytical", description:"When combining intuitive modalities (tarot, energy work, visualization) with analytical ones (coaching, astrology, journaling), let the intuitive work come first. Insight that arrives through symbol, sensation, or image has a different quality than insight that arrives through logic. Honor that by giving it space before the mind starts organizing." }
     ]
   },
-  { num:"04", title:"Boundaries", subtitle:"Clarify who this is for, what belongs inside the method, and where you refer out.", color:"#7A5B6E",
+  { num:"04", title:"Boundaries", subtitle:"Clarify who this is for, what belongs inside the method, and where you refer out.", color:"#7A5D6B",
     teaching:"A method with clear boundaries is a method with integrity. Boundaries protect the client from receiving work they are not ready for. They protect the practitioner from offering work they are not qualified to hold. And they protect the method itself from becoming a catchall that tries to serve everyone and ends up transforming no one. The clearest sign of a mature practitioner is their willingness to say 'this is where my method ends and someone else's begins.'",
     questions:["Who is this session designed for, and what season of their journey are they in?","What emotional and energetic readiness does this session require from the client?","What would make this session the wrong fit for a specific client right now?","Where does your facilitation end and clinical support begin?","What is your scope of practice within each modality you use?","What conversations or situations would prompt you to pause and refer out?"],
     principles:[
       { title:"The Client's State Overrides Your Plan", description:"You may plan to open with tarot and move into coaching. But if the client arrives in a trauma response, breathwork or energy work becomes the opening whether you planned it or not. The mixing framework is a design tool. The practitioner's ability to read the room and adapt is the real skill." }
     ]
   },
-  { num:"05", title:"Integration", subtitle:"Design how the client carries the transformation forward after the session ends.", color:"#B86A48",
+  { num:"05", title:"Integration", subtitle:"Design how the client carries the transformation forward after the session ends.", color:"#C4571F",
     teaching:"A session without integration is a beautiful experience that fades by Tuesday. Integration is where the transformation becomes the client's own. It is the bridge between what happened in your space and what happens in their life. The strongest methods build integration into the session itself, so the client leaves already practicing. And the wisest practitioners build accountability into integration, so the client knows someone is witnessing their follow-through.",
     questions:["What specific practice, object, or commitment does the client leave with?","How will the client know the transformation is taking root in their daily life?","What is the accountability structure between this session and the next?","What does the client do if the work surfaces something unexpected after they leave?","How does this session's integration feed into the next session's opening?","What is the simplest version of the integration practice, the one they will actually do?"],
     principles:[
@@ -197,10 +271,10 @@ const ROLE_MAP = {
 };
 
 const CLUSTERS = [
-  { id:"direction", label:"Seeking Direction", color:"#0E3D3D" },
-  { id:"energy", label:"Moving Energy", color:"#B86A48" },
-  { id:"forward", label:"Stepping Forward", color:"#C7A05A" },
-  { id:"threshold", label:"Marking a Threshold", color:"#7A5B6E" }
+  { id:"direction", label:"Seeking Direction", color:"#1F4A45" },
+  { id:"energy", label:"Moving Energy", color:"#C4571F" },
+  { id:"forward", label:"Stepping Forward", color:"#A8892E" },
+  { id:"threshold", label:"Marking a Threshold", color:"#7A5D6B" }
 ];
 
 const SESSION_ARCHETYPES = [
@@ -298,6 +372,47 @@ const SECTIONS = [
   { id:"builder", label:"Design Your Session" }
 ];
 
+/* ── EMBER PARTICLE SYSTEM ── */
+function EmberSystem() {
+  const containerRef = useRef(null);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) return;
+    const interval = setInterval(() => {
+      if (!containerRef.current) return;
+      const ember = document.createElement('div');
+      ember.className = 'ember-particle';
+      ember.style.left = Math.random() * 100 + 'vw';
+      ember.style.bottom = '-8px';
+      ember.style.width = (2 + Math.random() * 2) + 'px';
+      ember.style.height = ember.style.width;
+      ember.style.animationDuration = (6 + Math.random() * 6) + 's';
+      containerRef.current.appendChild(ember);
+      setTimeout(() => ember.remove(), 12000);
+    }, 700);
+    return () => clearInterval(interval);
+  }, []);
+  return React.createElement('div', { ref: containerRef, style: { position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' } });
+}
+
+/* ── FLOATING ORBS ── */
+function OrbLayer() {
+  const orbs = [
+    { w:280, h:280, color:'rgba(196,87,31,0.10)', dur:14, x:'15%', y:'10%' },
+    { w:220, h:220, color:'rgba(154,111,62,0.10)', dur:18, x:'80%', y:'20%' },
+    { w:240, h:240, color:'rgba(44,95,90,0.09)', dur:16, x:'70%', y:'80%' },
+    { w:160, h:160, color:'rgba(122,93,107,0.07)', dur:20, x:'10%', y:'75%' },
+  ];
+  return React.createElement('div', { className:'orb-ambient', style:{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0, overflow:'hidden' } },
+    orbs.map((o, i) => React.createElement('div', { key:i, style:{
+      position:'absolute', left:o.x, top:o.y, width:o.w, height:o.h,
+      borderRadius:'50%', background:o.color, filter:'blur(60px)',
+      animation:`drift-orb ${o.dur}s ease-in-out infinite`,
+      animationDelay:`-${i * 3}s`
+    }}))
+  );
+}
+
 /* ── COMPONENTS ── */
 
 function ModalityCard({ mod, isExpanded, onToggle }) {
@@ -305,12 +420,12 @@ function ModalityCard({ mod, isExpanded, onToggle }) {
   const tabs = [{id:"core",label:"Transformation"},{id:"role",label:"Role"},{id:"sequencing",label:"Sequence"},{id:"boundaries",label:"Boundaries"},{id:"integration",label:"Integration"}];
 
   return (
-    <div style={{ background: isExpanded ? `${S.parch},0.7)` : `${S.parch},0.4)`, border: isExpanded ? `2px solid ${mod.color}` : `1px solid ${S.mist},0.15)`, borderRadius:12, overflow:"hidden", transition:"all 0.3s ease", marginBottom:12 }}>
-      <button onClick={onToggle} style={{ width:"100%", padding:"20px 24px", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:16, fontFamily:S.cin, textAlign:"left" }}>
+    <div style={{ background: isExpanded ? S.surface : `${S.parch},0.55)`, border: isExpanded ? `2px solid ${mod.color}` : `1px solid ${S.line2}`, borderRadius:12, overflow:"hidden", transition:"all 0.3s ease", marginBottom:12, backdropFilter:'blur(16px)', boxShadow: isExpanded ? S.shadow : 'none' }}>
+      <button onClick={onToggle} style={{ width:"100%", padding:"20px 24px", background:"none", border:"none", cursor:"pointer", display:"flex", alignItems:"center", gap:16, fontFamily:S.serif, textAlign:"left" }}>
         <span style={{ fontSize:24, width:44, height:44, display:"flex", alignItems:"center", justifyContent:"center", background:`${mod.color}15`, borderRadius:"50%", color:mod.color, flexShrink:0 }}>{mod.icon}</span>
         <div style={{ flex:1 }}>
           <div className="f-cin c-deep" style={{ fontSize:18, fontWeight:600 }}>{mod.name}</div>
-          <div className="f-play" style={{ fontSize:13, color:S.plum, fontStyle:"italic", marginTop:2 }}>{mod.tagline}</div>
+          <div className="f-play" style={{ fontSize:14, color:S.plum, fontStyle:"italic", marginTop:2 }}>{mod.tagline}</div>
           {mod.canFill && (
             <div style={{ display:"flex", gap:4, marginTop:6, flexWrap:"wrap" }}>
               {mod.canFill.map((role,ri) => (
@@ -326,29 +441,29 @@ function ModalityCard({ mod, isExpanded, onToggle }) {
         <div style={{ padding:"0 24px 24px" }}>
           <div style={{ display:"flex", gap:4, marginBottom:20, flexWrap:"wrap" }}>
             {tabs.map(tab => (
-              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className="f-mont" style={{ padding:"8px 14px", borderRadius:20, border:"none", cursor:"pointer", fontSize:12, fontWeight:activeTab===tab.id?600:400, background:activeTab===tab.id?mod.color:`${S.mist},0.08)`, color:activeTab===tab.id?"#FFF":S.plum, transition:"all 0.2s ease" }}>{tab.label}</button>
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)} className="f-mont" style={{ padding:"8px 14px", borderRadius:30, border:"none", cursor:"pointer", fontSize:12, fontWeight:activeTab===tab.id?600:400, background:activeTab===tab.id?mod.color:`${S.mist},0.06)`, color:activeTab===tab.id?S.btnText:S.plum, transition:"all 0.2s ease" }}>{tab.label}</button>
             ))}
           </div>
-          <div style={{ background:`${S.parch},0.5)`, borderRadius:10, padding:20, border:`1px solid ${S.mist},0.08)` }}>
-            {activeTab==="core" && (<div><h4 className="f-cin" style={{fontSize:16,color:mod.color,margin:"0 0 10px",fontWeight:600}}>{mod.core.title}</h4><p className="f-mont" style={{fontSize:14,lineHeight:1.75,color:"#1a4a4a",margin:0}}>{mod.core.description}</p></div>)}
-            {activeTab==="role" && (<div><h4 className="f-cin" style={{fontSize:16,color:mod.color,margin:"0 0 10px",fontWeight:600}}>{mod.role.title}</h4><p className="f-mont" style={{fontSize:14,lineHeight:1.75,color:"#1a4a4a",margin:0}}>{mod.role.unique}</p></div>)}
-            {activeTab==="sequencing" && (<div><div className="f-mont" style={{display:"inline-block",padding:"4px 12px",background:`${mod.color}15`,borderRadius:12,fontSize:12,fontWeight:600,color:mod.color,marginBottom:12}}>{mod.sequencing.position}</div><p className="f-mont" style={{fontSize:14,lineHeight:1.75,color:"#1a4a4a",margin:0}}>{mod.sequencing.rationale}</p></div>)}
+          <div style={{ background:`${S.parch},0.5)`, borderRadius:10, padding:20, border:`1px solid ${S.line2}`, backdropFilter:'blur(12px)' }}>
+            {activeTab==="core" && (<div><h4 className="f-cin" style={{fontSize:17,color:mod.color,margin:"0 0 10px",fontWeight:600}}>{mod.core.title}</h4><p className="f-mont" style={{fontSize:14,lineHeight:1.75,color:S.deep,margin:0}}>{mod.core.description}</p></div>)}
+            {activeTab==="role" && (<div><h4 className="f-cin" style={{fontSize:17,color:mod.color,margin:"0 0 10px",fontWeight:600}}>{mod.role.title}</h4><p className="f-mont" style={{fontSize:14,lineHeight:1.75,color:S.deep,margin:0}}>{mod.role.unique}</p></div>)}
+            {activeTab==="sequencing" && (<div><div className="f-mont" style={{display:"inline-block",padding:"4px 12px",background:`${mod.color}15`,borderRadius:30,fontSize:12,fontWeight:600,color:mod.color,marginBottom:12}}>{mod.sequencing.position}</div><p className="f-mont" style={{fontSize:14,lineHeight:1.75,color:S.deep,margin:0}}>{mod.sequencing.rationale}</p></div>)}
             {activeTab==="boundaries" && (
               <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                <div><h5 className="f-cin" style={{fontSize:14,color:S.sage,margin:"0 0 8px",fontWeight:600}}>✓ When This Modality Fits</h5>
-                  {mod.boundaries.appropriate.map((item,i) => (<p key={i} className="f-mont" style={{fontSize:13,lineHeight:1.6,color:"#1a4a4a",margin:"0 0 6px",paddingLeft:16,position:"relative"}}><span style={{position:"absolute",left:0,color:S.sage}}>·</span>{item}</p>))}
+                <div><h5 className="f-cin" style={{fontSize:15,color:S.sage,margin:"0 0 8px",fontWeight:600}}>When This Modality Fits</h5>
+                  {mod.boundaries.appropriate.map((item,i) => (<p key={i} className="f-mont" style={{fontSize:13,lineHeight:1.6,color:S.deep,margin:"0 0 6px",paddingLeft:16,position:"relative"}}><span style={{position:"absolute",left:0,color:S.sage}}>·</span>{item}</p>))}
                 </div>
-                <div><h5 className="f-cin" style={{fontSize:14,color:S.terra,margin:"0 0 8px",fontWeight:600}}>✗ When It Is Not the Right Tool</h5>
-                  {mod.boundaries.notAppropriate.map((item,i) => (<p key={i} className="f-mont" style={{fontSize:13,lineHeight:1.6,color:"#1a4a4a",margin:"0 0 6px",paddingLeft:16,position:"relative"}}><span style={{position:"absolute",left:0,color:S.terra}}>·</span>{item}</p>))}
+                <div><h5 className="f-cin" style={{fontSize:15,color:S.terra,margin:"0 0 8px",fontWeight:600}}>When It Is Not the Right Tool</h5>
+                  {mod.boundaries.notAppropriate.map((item,i) => (<p key={i} className="f-mont" style={{fontSize:13,lineHeight:1.6,color:S.deep,margin:"0 0 6px",paddingLeft:16,position:"relative"}}><span style={{position:"absolute",left:0,color:S.terra}}>·</span>{item}</p>))}
                 </div>
               </div>
             )}
             {activeTab==="integration" && (
-              <div><h5 className="f-cin" style={{fontSize:14,color:mod.color,margin:"0 0 10px",fontWeight:600}}>How the Client Carries This Forward</h5>
+              <div><h5 className="f-cin" style={{fontSize:15,color:mod.color,margin:"0 0 10px",fontWeight:600}}>How the Client Carries This Forward</h5>
                 {mod.integration.practices.map((item,i) => (
                   <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:10}}>
                     <span className="f-cin" style={{fontSize:16,color:mod.color,opacity:0.6,flexShrink:0,marginTop:-1}}>{i+1}.</span>
-                    <p className="f-mont" style={{fontSize:13,lineHeight:1.6,color:"#1a4a4a",margin:0}}>{item}</p>
+                    <p className="f-mont" style={{fontSize:13,lineHeight:1.6,color:S.deep,margin:0}}>{item}</p>
                   </div>
                 ))}
               </div>
@@ -380,7 +495,7 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
 
   const addMod = (modId) => { if(flowOrder.length<8) setFlowOrder([...flowOrder, modId+"__"+Date.now()]); };
   const getModCount = (modId) => flowOrder.filter(id=>id.split("__")[0]===modId).length;
-  const addCustomMod = () => { if(customName.trim()&&flowOrder.length<8){ const id="custom_"+Date.now(); setCustomModData({...customModData,[id]:{id,name:customName.trim(),icon:"○",color:S.plum}}); setFlowOrder([...flowOrder,id]); setCustomName(""); setShowCustomInput(false); } };
+  const addCustomMod = () => { if(customName.trim()&&flowOrder.length<8){ const id="custom_"+Date.now(); setCustomModData({...customModData,[id]:{id,name:customName.trim(),icon:"○",color:S.mauve}}); setFlowOrder([...flowOrder,id]); setCustomName(""); setShowCustomInput(false); } };
   const removeFromFlow = (modId) => { setFlowOrder(flowOrder.filter(m=>m!==modId)); if(modId.startsWith("custom_")){const d={...customModData};delete d[modId];setCustomModData(d);} };
   const getModData = (instId) => instId.startsWith("custom_")?customModData[instId]:MODALITIES.find(m=>m.id===instId.split("__")[0]);
   const moveInFlow = (index,direction) => { const f=[...flowOrder]; const s=index+direction; if(s>=0&&s<f.length){[f[index],f[s]]=[f[s],f[index]];setFlowOrder(f);} };
@@ -403,23 +518,23 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
 
   const handleCopy = () => { const t=document.getElementById("export-textarea"); if(t){t.select();t.setSelectionRange(0,99999);try{document.execCommand("copy");setCopied(true);setTimeout(()=>setCopied(false),3000);}catch(e){}} };
 
-  const inputStyle = { width:"100%", padding:"12px 16px", borderRadius:8, border:`1px solid ${S.mist},0.2)`, background:`${S.parch},0.6)`, fontFamily:S.mont, fontSize:14, color:S.deep, outline:"none", boxSizing:"border-box" };
+  const inputStyle = { width:"100%", padding:"12px 16px", borderRadius:8, border:`1px solid ${S.line}`, background:`${S.parch},0.6)`, fontFamily:S.sans, fontSize:14, color:S.deep, outline:"none", boxSizing:"border-box" };
 
   return (
     <div>
       <p className="f-mont" style={{fontSize:14,lineHeight:1.7,color:S.plum,margin:"0 0 20px"}}>Select your modalities and arrange them in session order. The first opens, the middle layers deepen, and the last closes. Every modality you include should earn its place in the transformation.</p>
 
-      <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:13,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Name</label><input type="text" value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="e.g., The Reclamation Session, Full Moon Unveiling Circle" style={inputStyle}/></div>
-      <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:13,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Frame</label><input type="text" value={sessionFrame} onChange={e=>setSessionFrame(e.target.value)} placeholder="e.g., Full Moon in Leo, Spring Equinox, Saturn Return" style={inputStyle}/><p className="f-play" style={{fontSize:11,color:S.sage,margin:"6px 0 0",fontStyle:"italic",lineHeight:1.5}}>The sacred container or cosmic moment that holds the session.</p></div>
-      <div style={{marginBottom:24}}><label className="f-cin" style={{fontSize:13,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>What transformation do you provide in this session?</label><input type="text" value={sessionIntent} onChange={e=>setSessionIntent(e.target.value)} placeholder="e.g., Help my client step into visibility and own their voice" style={inputStyle}/></div>
+      <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Name</label><input type="text" value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="e.g., The Reclamation Session, Full Moon Unveiling Circle" style={inputStyle}/></div>
+      <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Frame</label><input type="text" value={sessionFrame} onChange={e=>setSessionFrame(e.target.value)} placeholder="e.g., Full Moon in Leo, Spring Equinox, Saturn Return" style={inputStyle}/><p className="f-play" style={{fontSize:12,color:S.faint,margin:"6px 0 0",fontStyle:"italic",lineHeight:1.5}}>The sacred container or cosmic moment that holds the session.</p></div>
+      <div style={{marginBottom:24}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>What transformation do you provide in this session?</label><input type="text" value={sessionIntent} onChange={e=>setSessionIntent(e.target.value)} placeholder="e.g., Help my client step into visibility and own their voice" style={inputStyle}/></div>
 
-      <div style={{marginBottom:8}}><label className="f-cin" style={{fontSize:13,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Select Your Modalities</label></div>
+      <div style={{marginBottom:8}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Select Your Modalities</label></div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))",gap:8,marginBottom:12}}>
         {MODALITIES.map(mod => { const cnt=getModCount(mod.id); const dis=flowOrder.length>=8; return (
-          <button key={mod.id} onClick={()=>!dis&&addMod(mod.id)} style={{padding:12,borderRadius:10,border:cnt>0?`2px solid ${mod.color}`:`1px solid ${S.mist},0.12)`,background:cnt>0?`${mod.color}12`:`${S.parch},0.4)`,cursor:dis?"default":"pointer",opacity:dis?0.4:1,display:"flex",alignItems:"center",gap:8,transition:"all 0.2s ease",textAlign:"left",position:"relative"}}>
+          <button key={mod.id} onClick={()=>!dis&&addMod(mod.id)} style={{padding:12,borderRadius:10,border:cnt>0?`2px solid ${mod.color}`:`1px solid ${S.line2}`,background:cnt>0?`${mod.color}12`:S.surface,cursor:dis?"default":"pointer",opacity:dis?0.4:1,display:"flex",alignItems:"center",gap:8,transition:"all 0.2s ease",textAlign:"left",position:"relative",backdropFilter:'blur(12px)'}}>
             <span style={{fontSize:18,color:mod.color}}>{mod.icon}</span>
             <span className="f-mont" style={{fontSize:12,color:S.deep,fontWeight:cnt>0?600:400}}>{mod.name.split(" & ")[0]}</span>
-            {cnt>0 && <span style={{position:"absolute",top:-6,right:-6,background:mod.color,color:"#fff",fontSize:10,fontFamily:"'Montserrat',sans-serif",fontWeight:700,width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</span>}
+            {cnt>0 && <span style={{position:"absolute",top:-6,right:-6,background:mod.color,color:S.btnText,fontSize:10,fontFamily:S.sans,fontWeight:700,width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</span>}
           </button>
         );})}
       </div>
@@ -427,20 +542,20 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
       {/* Custom modality */}
       <div style={{marginBottom:24}}>
         {!showCustomInput ? (
-          <button onClick={()=>flowOrder.length<8&&setShowCustomInput(true)} className="f-mont" style={{padding:"12px 16px",borderRadius:10,border:`1px dashed ${S.mist},0.25)`,background:"transparent",cursor:flowOrder.length>=8?"default":"pointer",opacity:flowOrder.length>=8?0.4:1,display:"flex",alignItems:"center",gap:8,fontSize:12,color:S.plum,width:"100%"}}>
+          <button onClick={()=>flowOrder.length<8&&setShowCustomInput(true)} className="f-mont" style={{padding:"12px 16px",borderRadius:10,border:`1px dashed ${S.line}`,background:"transparent",cursor:flowOrder.length>=8?"default":"pointer",opacity:flowOrder.length>=8?0.4:1,display:"flex",alignItems:"center",gap:8,fontSize:12,color:S.plum,width:"100%"}}>
             <span style={{fontSize:16}}>+</span> Add another modality (EFT, Human Design, Akashic Records, NLP, etc.)
           </button>
         ) : (
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
             <input type="text" value={customName} onChange={e=>setCustomName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomMod()} placeholder="Type your modality name..." autoFocus style={{...inputStyle,flex:1}}/>
-            <button onClick={addCustomMod} className="f-mont" style={{padding:"12px 20px",borderRadius:8,border:"none",background:S.plum,color:"#FFF",fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>Add</button>
+            <button onClick={addCustomMod} className="f-mont" style={{padding:"12px 20px",borderRadius:8,border:"none",background:S.copper,color:S.btnText,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>Add</button>
             <button onClick={()=>{setShowCustomInput(false);setCustomName("");}} style={{padding:12,borderRadius:8,border:"none",background:"transparent",color:S.terra,fontSize:16,cursor:"pointer"}}>×</button>
           </div>
         )}
         {flowOrder.filter(id=>id.startsWith("custom_")).map(id=>customModData[id]).filter(Boolean).length>0 && (
           <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
             {flowOrder.filter(id=>id.startsWith("custom_")).map(id=>customModData[id]).filter(Boolean).map(cm=>(
-              <span key={cm.id} className="f-mont" style={{padding:"6px 12px",borderRadius:16,background:`${S.mist},0.08)`,border:`1px solid ${S.mist},0.15)`,fontSize:12,color:S.plum,display:"flex",alignItems:"center",gap:6}}>
+              <span key={cm.id} className="f-mont" style={{padding:"6px 12px",borderRadius:16,background:`${S.mist},0.06)`,border:`1px solid ${S.line2}`,fontSize:12,color:S.plum,display:"flex",alignItems:"center",gap:6}}>
                 ○ {cm.name} <button onClick={()=>removeFromFlow(cm.id)} style={{background:"none",border:"none",cursor:"pointer",color:S.terra,fontSize:14,padding:"0 2px"}}>×</button>
               </span>
             ))}
@@ -450,25 +565,25 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
 
       {/* Role guide from archetype */}
       {activeArchetype && (
-        <div style={{background:`${S.mist},0.06)`,borderRadius:12,padding:18,marginBottom:20,border:`1px solid ${S.mist},0.12)`}}>
+        <div style={{background:`${S.mist},0.04)`,borderRadius:12,padding:18,marginBottom:20,border:`1px solid ${S.line2}`,backdropFilter:'blur(12px)'}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <h4 className="f-cin" style={{fontSize:14,color:S.plum,margin:0,fontWeight:600}}>✦ Role Guide: {activeArchetype.name}</h4>
+            <h4 className="f-cin" style={{fontSize:15,color:S.copper,margin:0,fontWeight:600}}>✦ Role Guide: {activeArchetype.name}</h4>
             <button onClick={()=>{setActiveArchetype(null);onClearArchetype&&onClearArchetype();}} className="f-mont" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:S.plum}}>clear</button>
           </div>
-          <p className="f-play" style={{fontSize:12,color:S.plum,margin:"0 0 12px",fontStyle:"italic",lineHeight:1.5}}>Assign your own modalities to fill each role below. The role describes the job. You choose the tool.</p>
+          <p className="f-play" style={{fontSize:13,color:S.plum,margin:"0 0 12px",fontStyle:"italic",lineHeight:1.5}}>Assign your own modalities to fill each role below. The role describes the job. You choose the tool.</p>
           {activeArchetype.roles.map((r,i)=>(
-            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:i<activeArchetype.roles.length-1?10:0,paddingBottom:i<activeArchetype.roles.length-1?10:0,borderBottom:i<activeArchetype.roles.length-1?`1px solid ${S.mist},0.08)`:"none"}}>
-              <span className="f-cin" style={{fontSize:14,color:S.plum,opacity:0.5,flexShrink:0,width:20,marginTop:1}}>{i+1}.</span>
+            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:i<activeArchetype.roles.length-1?10:0,paddingBottom:i<activeArchetype.roles.length-1?10:0,borderBottom:i<activeArchetype.roles.length-1?`1px solid ${S.line2}`:"none"}}>
+              <span className="f-cin" style={{fontSize:14,color:S.copper,opacity:0.5,flexShrink:0,width:20,marginTop:1}}>{i+1}.</span>
               <div>
-                <div className="f-cin c-deep" style={{fontSize:13,fontWeight:600,marginBottom:2}}>{r.role}</div>
+                <div className="f-cin c-deep" style={{fontSize:14,fontWeight:600,marginBottom:2}}>{r.role}</div>
                 <div className="f-mont" style={{fontSize:12,color:S.plum,lineHeight:1.5}}>{r.job}</div>
-                {ROLE_MAP[r.role] && (<div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:6}}>{ROLE_MAP[r.role].modalities.map((m,mi)=>(<span key={mi} className="f-mont" style={{fontSize:10,color:S.plum,background:`${S.mist},0.08)`,padding:"2px 7px",borderRadius:8}}>{m}</span>))}</div>)}
+                {ROLE_MAP[r.role] && (<div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:6}}>{ROLE_MAP[r.role].modalities.map((m,mi)=>(<span key={mi} className="f-mont" style={{fontSize:10,color:S.plum,background:`${S.mist},0.06)`,padding:"2px 7px",borderRadius:8}}>{m}</span>))}</div>)}
               </div>
             </div>
           ))}
           {activeArchetype.boundaryCheck && (
-            <div style={{marginTop:12,padding:"10px 12px",background:"rgba(160,120,90,0.06)",borderRadius:6,borderLeft:"3px solid rgba(160,120,90,0.2)"}}>
-              <div className="f-cin" style={{fontSize:11,color:S.terra,textTransform:"uppercase",letterSpacing:1,marginBottom:4,fontWeight:600}}>Boundary Check</div>
+            <div style={{marginTop:12,padding:"10px 12px",background:"rgba(196,87,31,0.06)",borderRadius:6,borderLeft:`3px solid rgba(196,87,31,0.25)`}}>
+              <div className="f-mono" style={{fontSize:10,color:S.terra,textTransform:"uppercase",letterSpacing:1.5,marginBottom:4,fontWeight:500}}>Boundary Check</div>
               <p className="f-mont" style={{fontSize:12,color:S.plum,margin:0,lineHeight:1.6}}>{activeArchetype.boundaryCheck}</p>
             </div>
           )}
@@ -477,16 +592,16 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
 
       {/* Flow display */}
       {flowOrder.length > 0 && (
-        <div style={{background:`${S.parch},0.6)`,borderRadius:12,padding:20,border:`1px solid ${S.mist},0.12)`}}>
-          <h4 className="f-cin c-deep" style={{fontSize:16,margin:"0 0 4px"}}>{sessionName||"Your Session Flow"}</h4>
-          {sessionFrame && <div className="f-play" style={{fontSize:12,color:S.terra,marginBottom:16,fontStyle:"italic"}}>✦ {sessionFrame}</div>}
+        <div style={{background:S.surface,borderRadius:12,padding:20,border:`1px solid ${S.line2}`,backdropFilter:'blur(16px)',boxShadow:S.shadow}}>
+          <h4 className="f-cin c-deep" style={{fontSize:17,margin:"0 0 4px"}}>{sessionName||"Your Session Flow"}</h4>
+          {sessionFrame && <div className="f-play" style={{fontSize:13,color:S.terra,marginBottom:16,fontStyle:"italic"}}>✦ {sessionFrame}</div>}
           {!sessionFrame && <div style={{marginBottom:12}}/>}
 
           {flowOrder.map((modId,index)=>{
             const mod=getModData(modId); if(!mod) return null;
-            const role=getRole(index,flowOrder.length); const isC=modId.startsWith("custom_"); const mc=mod.color||S.plum;
+            const role=getRole(index,flowOrder.length); const isC=modId.startsWith("custom_"); const mc=mod.color||S.copper;
             return (
-              <div key={modId} style={{display:"flex",alignItems:"center",gap:12,padding:14,background:`${mc}08`,borderRadius:8,marginBottom:8,border:`1px solid ${mc}20`}}>
+              <div key={modId} style={{display:"flex",alignItems:"center",gap:12,padding:14,background:`${mc}08`,borderRadius:8,marginBottom:8,border:`1px solid ${mc}20`,borderLeft:`3px solid ${mc}`}}>
                 <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <button onClick={()=>moveInFlow(index,-1)} disabled={index===0} style={{background:"none",border:"none",cursor:index===0?"default":"pointer",opacity:index===0?0.2:0.6,fontSize:10,padding:"2px 4px",color:S.plum}}>▲</button>
                   <button onClick={()=>moveInFlow(index,1)} disabled={index===flowOrder.length-1} style={{background:"none",border:"none",cursor:index===flowOrder.length-1?"default":"pointer",opacity:index===flowOrder.length-1?0.2:0.6,fontSize:10,padding:"2px 4px",color:S.plum}}>▼</button>
@@ -502,34 +617,34 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
           })}
 
           {(sessionFrame||sessionIntent)&&flowOrder.length>=2 && (
-            <div style={{marginTop:16,padding:16,background:`${S.sage}08`,borderRadius:8,border:`1px solid ${S.sage}15`}}>
+            <div style={{marginTop:16,padding:16,background:`rgba(44,95,90,0.06)`,borderRadius:8,border:`1px solid rgba(44,95,90,0.15)`}}>
               {sessionIntent && <p className="f-play" style={{fontSize:13,color:S.sage,margin:"0 0 8px",lineHeight:1.6,fontStyle:"italic"}}>✦ Transformation: {sessionIntent}</p>}
               <p className="f-play" style={{fontSize:13,color:S.sage,margin:0,fontStyle:"italic",lineHeight:1.6}}>Your session opens with {getModData(flowOrder[0])?.name?.split(" & ")[0]||flowOrder[0]} and closes with {getModData(flowOrder[flowOrder.length-1])?.name?.split(" & ")[0]||flowOrder[flowOrder.length-1]}. Check that your opening modality creates the right arrival state and your closing modality serves integration.</p>
             </div>
           )}
 
           {/* Boundary reflection */}
-          <div style={{marginTop:16,padding:18,background:`${S.mist},0.05)`,borderRadius:10,border:`1px solid ${S.mist},0.1)`}}>
-            <h4 className="f-cin" style={{fontSize:14,color:S.plum,margin:"0 0 4px",fontWeight:600}}>Boundary Reflection</h4>
-            <p className="f-play" style={{fontSize:11,color:S.plum,margin:"0 0 14px",fontStyle:"italic",lineHeight:1.5}}>Answer these for the session you just designed. They become part of your session details.</p>
+          <div style={{marginTop:16,padding:18,background:`${S.mist},0.03)`,borderRadius:10,border:`1px solid ${S.line2}`}}>
+            <h4 className="f-cin" style={{fontSize:14,color:S.copper,margin:"0 0 4px",fontWeight:600}}>Boundary Reflection</h4>
+            <p className="f-play" style={{fontSize:12,color:S.plum,margin:"0 0 14px",fontStyle:"italic",lineHeight:1.5}}>Answer these for the session you just designed. They become part of your session details.</p>
             <div style={{marginBottom:12}}><label className="f-mont" style={{fontSize:12,color:S.plum,display:"block",marginBottom:4,fontWeight:600}}>Who is this session for?</label><input type="text" value={boundaryWho} onChange={e=>setBoundaryWho(e.target.value)} placeholder="What readiness does this session require from the client?" style={inputStyle}/></div>
             <div style={{marginBottom:12}}><label className="f-mont" style={{fontSize:12,color:S.plum,display:"block",marginBottom:4,fontWeight:600}}>What is outside my scope in this session?</label><input type="text" value={boundaryScope} onChange={e=>setBoundaryScope(e.target.value)} placeholder="Where do I refer out?" style={inputStyle}/></div>
             <div><label className="f-mont" style={{fontSize:12,color:S.plum,display:"block",marginBottom:4,fontWeight:600}}>What could this session surface that I need to be prepared to hold?</label><input type="text" value={boundaryPrepared} onChange={e=>setBoundaryPrepared(e.target.value)} placeholder="What emotional or energetic responses should I be ready for?" style={inputStyle}/></div>
           </div>
 
           <div style={{marginTop:16,textAlign:"center"}}>
-            <button onClick={generateExportText} className="f-cin" style={{padding:"12px 28px",borderRadius:24,border:"2px solid #8B6F5E",background:"transparent",color:S.sage,fontSize:13,fontWeight:600,cursor:"pointer",letterSpacing:0.5}}>✦ Get Your Session Details</button>
+            <button onClick={generateExportText} className="f-cin" style={{padding:"12px 28px",borderRadius:30,border:`2px solid ${S.copper}`,background:"transparent",color:S.copper,fontSize:14,fontWeight:600,cursor:"pointer",letterSpacing:0.5}}>✦ Get Your Session Details</button>
           </div>
 
           {showExportText && (
-            <div style={{marginTop:16,background:`${S.parch},0.9)`,borderRadius:12,padding:20,border:`1px solid ${S.mist},0.15)`}}>
+            <div style={{marginTop:16,background:S.surface,borderRadius:12,padding:20,border:`1px solid ${S.line}`,backdropFilter:'blur(16px)'}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                <p className="f-play" style={{fontSize:12,color:S.plum,margin:0,fontStyle:"italic"}}>Select all the text below and copy it to paste wherever you need it ✦</p>
+                <p className="f-play" style={{fontSize:13,color:S.plum,margin:0,fontStyle:"italic"}}>Select all the text below and copy it to paste wherever you need it ✦</p>
                 <button onClick={()=>setShowExportText(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:S.terra,padding:"0 4px"}}>×</button>
               </div>
-              <textarea id="export-textarea" readOnly value={exportText} onFocus={e=>e.target.select()} onClick={e=>e.target.select()} style={{width:"100%",minHeight:320,padding:16,borderRadius:8,border:`1px solid ${S.mist},0.15)`,background:"#F3E9DA",fontFamily:"monospace",fontSize:12,lineHeight:1.6,color:S.deep,resize:"vertical",outline:"none",boxSizing:"border-box"}}/>
+              <textarea id="export-textarea" readOnly value={exportText} onFocus={e=>e.target.select()} onClick={e=>e.target.select()} style={{width:"100%",minHeight:320,padding:16,borderRadius:8,border:`1px solid ${S.line2}`,background:S.bg,fontFamily:S.mono,fontSize:12,lineHeight:1.6,color:S.deep,resize:"vertical",outline:"none",boxSizing:"border-box"}}/>
               <div style={{textAlign:"center",marginTop:12}}>
-                <button onClick={handleCopy} className="f-cin" style={{padding:"10px 24px",borderRadius:20,border:copied?"2px solid "+S.sage:"2px solid #8B6F5E",background:copied?`${S.sage}08`:"transparent",color:copied?S.sage:"#8B6F5E",fontSize:13,fontWeight:600,cursor:"pointer",transition:"all 0.3s ease"}}>{copied?"✦ Copied":"Copy Text"}</button>
+                <button onClick={handleCopy} className="f-cin" style={{padding:"10px 24px",borderRadius:30,border:copied?`2px solid ${S.sage}`:`2px solid ${S.copper}`,background:copied?`rgba(44,95,90,0.06)`:"transparent",color:copied?S.sage:S.copper,fontSize:14,fontWeight:600,cursor:"pointer",transition:"all 0.3s ease"}}>{copied?"✦ Copied":"Copy Text"}</button>
               </div>
             </div>
           )}
@@ -537,7 +652,7 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
       )}
 
       {flowOrder.length===0 && (
-        <div className="f-play" style={{textAlign:"center",padding:32,color:S.sage,fontSize:14,fontStyle:"italic"}}>Select your first modality to begin designing your session flow</div>
+        <div className="f-play" style={{textAlign:"center",padding:32,color:S.faint,fontSize:15,fontStyle:"italic"}}>Select your first modality to begin designing your session flow</div>
       )}
     </div>
   );
@@ -553,47 +668,58 @@ function ModalityClarityGuide() {
   const [expandedArchetype, setExpandedArchetype] = useState(null);
 
   return (
-    <div style={{ minHeight:"100vh", background:"linear-gradient(135deg, rgba(214,210,201,0.92) 0%, rgba(224,218,208,0.95) 30%, rgba(210,206,197,0.9) 55%, rgba(220,215,205,0.95) 80%, rgba(214,210,201,0.92) 100%)", backgroundAttachment:"fixed", fontFamily:S.mont, color:S.deep }}>
+    <div style={{ minHeight:"100vh", background:`radial-gradient(ellipse 120% 90% at 50% -10%, #EDE3D3 0%, #F5EDE0 50%, #E8DCCA 100%)`, backgroundAttachment:"fixed", fontFamily:S.sans, color:S.deep, position:'relative' }}>
+
+      {/* Atmospheric color washes */}
+      <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
+        background:`radial-gradient(ellipse 60% 50% at 18% 12%, rgba(196,87,31,0.10) 0%, transparent 55%),
+          radial-gradient(ellipse 50% 55% at 85% 22%, rgba(154,111,62,0.10) 0%, transparent 52%),
+          radial-gradient(ellipse 55% 50% at 72% 88%, rgba(44,95,90,0.09) 0%, transparent 55%),
+          radial-gradient(ellipse 45% 55% at 8% 82%, rgba(122,93,107,0.07) 0%, transparent 55%)`
+      }} />
+
+      <OrbLayer />
+      <EmberSystem />
 
       {/* Header */}
-      <div style={{ padding:"40px 24px 20px", textAlign:"center", borderBottom:`1px solid ${S.mist},0.1)` }}>
-        <div className="f-mont" style={{ fontSize:11, letterSpacing:3, textTransform:"uppercase", color:S.terra, marginBottom:8 }}>Method Alchemy Challenge</div>
-        <h1 className="f-cin c-deep" style={{ fontSize:28, fontWeight:600, margin:"0 0 6px", lineHeight:1.2 }}>Modality Clarity Guide</h1>
-        <p className="f-play" style={{ fontSize:14, color:S.plum, fontStyle:"italic", margin:0 }}>& Modality Mixing Framework</p>
+      <div style={{ padding:"40px 24px 20px", textAlign:"center", borderBottom:`1px solid ${S.line2}`, position:'relative', zIndex:1 }}>
+        <div className="f-mono" style={{ fontSize:10, letterSpacing:3, textTransform:"uppercase", color:S.terra, marginBottom:8 }}>Method Alchemy Challenge</div>
+        <h1 className="f-cin shimmer-title" style={{ fontSize:30, fontWeight:600, margin:"0 0 6px", lineHeight:1.2 }}>Modality Clarity Guide</h1>
+        <p className="f-play" style={{ fontSize:15, color:S.plum, fontStyle:"italic", margin:0 }}>& Modality Mixing Framework</p>
       </div>
 
-      {/* Navigation – FIXED: centered on desktop, scrollable on mobile */}
-      <div style={{ display:"flex", gap:6, padding:"12px 24px", overflowX:"auto", justifyContent:"center", flexWrap:"wrap", borderBottom:`1px solid ${S.mist},0.08)`, background:`${S.parch},0.3)` }}>
+      {/* Navigation */}
+      <div style={{ display:"flex", gap:6, padding:"12px 24px", overflowX:"auto", justifyContent:"center", flexWrap:"wrap", borderBottom:`1px solid ${S.line2}`, background:`${S.parch},0.3)`, position:'relative', zIndex:1 }}>
         {SECTIONS.map(section => (
-          <button key={section.id} onClick={() => setActiveSection(section.id)} className="f-mont" style={{ padding:"8px 16px", borderRadius:20, border:"none", cursor:"pointer", fontSize:12, fontWeight:activeSection===section.id?600:400, background:activeSection===section.id?"#8B6F5E":"transparent", color:activeSection===section.id?"#FFF":S.plum, whiteSpace:"nowrap", transition:"all 0.2s ease" }}>{section.label}</button>
+          <button key={section.id} onClick={() => setActiveSection(section.id)} className="f-mont" style={{ padding:"8px 16px", borderRadius:30, border:"none", cursor:"pointer", fontSize:12, fontWeight:activeSection===section.id?600:400, background:activeSection===section.id?S.copper:"transparent", color:activeSection===section.id?S.btnText:S.plum, whiteSpace:"nowrap", transition:"all 0.2s ease" }}>{section.label}</button>
         ))}
       </div>
 
       {/* Content */}
-      <div style={{ padding:"24px 20px 60px", maxWidth:680, margin:"0 auto" }}>
+      <div style={{ padding:"24px 20px 60px", maxWidth:680, margin:"0 auto", position:'relative', zIndex:1 }}>
 
         {/* WELCOME */}
         {activeSection==="intro" && (
           <div>
             <div style={{ textAlign:"center", padding:"32px 16px", marginBottom:24 }}>
-              <div style={{ fontSize:40, marginBottom:16, opacity:0.7 }}>✦</div>
-              <h2 className="f-cin c-deep" style={{ fontSize:22, fontWeight:600, margin:"0 0 16px" }}>Sacred Practitioner, Welcome</h2>
+              <div style={{ fontSize:40, marginBottom:16, opacity:0.6, color:S.copper }}>✦</div>
+              <h2 className="f-cin c-deep" style={{ fontSize:24, fontWeight:600, margin:"0 0 16px" }}>Sacred Practitioner, Welcome</h2>
               <p className="f-mont" style={{ fontSize:14, lineHeight:1.8, color:S.plum, margin:"0 0 16px", maxWidth:520, marginLeft:"auto", marginRight:"auto" }}>Your method is a living architecture of transformation. Every modality you bring into a session has a role, a right time, and a boundary. This guide will help you see each one clearly so you can design sessions with deep intention.</p>
             </div>
-            <div style={{ background:`${S.parch},0.5)`, borderRadius:12, padding:24, border:`1px solid ${S.mist},0.1)`, marginBottom:24 }}>
-              <h3 className="f-cin" style={{ fontSize:16, color:S.terra, margin:"0 0 16px" }}>The 5-Part Signature Method Framework</h3>
+            <div style={{ background:S.surface, borderRadius:12, padding:24, border:`1px solid ${S.line2}`, marginBottom:24, backdropFilter:'blur(16px)', boxShadow:S.shadow }}>
+              <h3 className="f-cin" style={{ fontSize:17, color:S.copper, margin:"0 0 16px" }}>The 5-Part Signature Method Framework</h3>
               {[{num:"01",title:"Transformation",desc:"Define the core shift your method is designed to create."},{num:"02",title:"Roles",desc:"Give each modality a clear job inside the transformation."},{num:"03",title:"Sequence",desc:"Design the order that helps the transformation land."},{num:"04",title:"Boundaries",desc:"Clarify scope, fit, and what belongs inside the method."},{num:"05",title:"Integration",desc:"Support the client in carrying the transformation forward."}].map((item,i) => (
-                <div key={i} style={{ display:"flex", gap:14, alignItems:"flex-start", marginBottom:i<4?14:0, paddingBottom:i<4?14:0, borderBottom:i<4?`1px solid ${S.mist},0.06)`:"none" }}>
+                <div key={i} style={{ display:"flex", gap:14, alignItems:"flex-start", marginBottom:i<4?14:0, paddingBottom:i<4?14:0, borderBottom:i<4?`1px solid ${S.line2}`:"none" }}>
                   <span className="f-cin" style={{ fontSize:20, color:S.gold, opacity:0.5, flexShrink:0, width:28 }}>{item.num}</span>
                   <div>
-                    <div className="f-cin c-deep" style={{ fontSize:14, fontWeight:600, marginBottom:2 }}>{item.title}</div>
+                    <div className="f-cin c-deep" style={{ fontSize:15, fontWeight:600, marginBottom:2 }}>{item.title}</div>
                     <div className="f-mont" style={{ fontSize:13, color:S.plum }}>{item.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
             <div style={{ textAlign:"center", marginTop:28 }}>
-              <button onClick={() => setActiveSection("framework")} className="f-cin" style={{ padding:"14px 32px", borderRadius:24, border:"none", background:S.plum, color:"#FFF", fontSize:14, fontWeight:600, cursor:"pointer", letterSpacing:0.5 }}>Explore the Framework →</button>
+              <button onClick={() => setActiveSection("framework")} className="f-cin" style={{ padding:"14px 32px", borderRadius:30, border:"none", background:S.copper, color:S.btnText, fontSize:15, fontWeight:600, cursor:"pointer", letterSpacing:0.5 }}>Explore the Framework →</button>
             </div>
           </div>
         )}
@@ -602,7 +728,7 @@ function ModalityClarityGuide() {
         {activeSection==="library" && (
           <div>
             <div style={{ marginBottom:20 }}>
-              <h2 className="f-cin c-deep" style={{ fontSize:20, fontWeight:600, margin:"0 0 8px" }}>Modality Library</h2>
+              <h2 className="f-cin c-deep" style={{ fontSize:22, fontWeight:600, margin:"0 0 8px" }}>Modality Library</h2>
               <p className="f-mont" style={{ fontSize:13, color:S.plum, margin:0, lineHeight:1.6 }}>Tap any modality to explore its five dimensions. Each one is a design specification for how that tool serves the transformation.</p>
             </div>
             {MODALITIES.map(mod => <ModalityCard key={mod.id} mod={mod} isExpanded={expandedMod===mod.id} onToggle={() => setExpandedMod(expandedMod===mod.id?null:mod.id)} />)}
@@ -613,32 +739,32 @@ function ModalityClarityGuide() {
         {activeSection==="framework" && (
           <div>
             <div style={{ marginBottom:24 }}>
-              <h2 className="f-cin c-deep" style={{ fontSize:20, fontWeight:600, margin:"0 0 8px" }}>The 5-Part Signature Method Framework</h2>
-              <p className="f-play" style={{ fontSize:14, color:S.plum, margin:0, lineHeight:1.7, fontStyle:"italic" }}>Turn the modalities you already use into one clear, coherent transformation.</p>
+              <h2 className="f-cin c-deep" style={{ fontSize:22, fontWeight:600, margin:"0 0 8px" }}>The 5-Part Signature Method Framework</h2>
+              <p className="f-play" style={{ fontSize:15, color:S.plum, margin:0, lineHeight:1.7, fontStyle:"italic" }}>Turn the modalities you already use into one clear, coherent transformation.</p>
             </div>
             {SIGNATURE_FRAMEWORK.map((part,i) => (
-              <div key={i} style={{ background:`${S.parch},0.55)`, borderRadius:12, padding:24, marginBottom:16, border:`1px solid ${S.mist},0.1)` }}>
+              <div key={i} style={{ background:S.surface, borderRadius:12, padding:24, marginBottom:16, border:`1px solid ${S.line2}`, backdropFilter:'blur(16px)', boxShadow:S.shadow, borderLeft:`3px solid ${part.color}` }}>
                 <div style={{ display:"flex", gap:16, alignItems:"flex-start" }}>
-                  <div style={{ width:44,height:44,borderRadius:"50%",background:`${part.color}18`,border:`2px solid ${part.color}40`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:S.cin,fontSize:16,fontWeight:700,color:part.color,flexShrink:0 }}>{part.num.replace("0","")}</div>
+                  <div style={{ width:44,height:44,borderRadius:"50%",background:`${part.color}18`,border:`2px solid ${part.color}40`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:S.serif,fontSize:17,fontWeight:700,color:part.color,flexShrink:0 }}>{part.num.replace("0","")}</div>
                   <div style={{ flex:1 }}>
-                    <h3 className="f-cin c-deep" style={{ fontSize:18, fontWeight:600, margin:"0 0 4px", textTransform:"uppercase", letterSpacing:1.5 }}>{part.title}</h3>
+                    <h3 className="f-cin c-deep" style={{ fontSize:19, fontWeight:600, margin:"0 0 4px", textTransform:"uppercase", letterSpacing:1.5 }}>{part.title}</h3>
                     <p className="f-mont" style={{ fontSize:14, color:S.plum, margin:"0 0 12px", lineHeight:1.6, fontWeight:500 }}>{part.subtitle}</p>
                     <p className="f-mont" style={{ fontSize:13, color:S.plum, margin:"0 0 18px", lineHeight:1.75, opacity:0.85 }}>{part.teaching}</p>
-                    <div style={{ background:`${S.mist},0.04)`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${part.color}40` }}>
-                      <div className="f-cin" style={{ fontSize:12, color:part.color, textTransform:"uppercase", letterSpacing:1.5, marginBottom:12, fontWeight:600 }}>Questions to Sit With</div>
+                    <div style={{ background:`${S.mist},0.03)`, borderRadius:8, padding:"14px 16px", borderLeft:`3px solid ${part.color}40` }}>
+                      <div className="f-mono" style={{ fontSize:10, color:part.color, textTransform:"uppercase", letterSpacing:1.5, marginBottom:12, fontWeight:500 }}>Questions to Sit With</div>
                       {part.questions.map((q,j) => (
                         <div key={j} style={{ display:"flex", gap:10, alignItems:"flex-start", marginBottom:j<part.questions.length-1?10:0 }}>
                           <span style={{ color:part.color, fontSize:12, marginTop:2, flexShrink:0 }}>✦</span>
-                          <span className="f-mont" style={{ fontSize:13, color:"#1a4a4a", lineHeight:1.5 }}>{q}</span>
+                          <span className="f-mont" style={{ fontSize:13, color:S.deep, lineHeight:1.5 }}>{q}</span>
                         </div>
                       ))}
                     </div>
                     {part.principles?.length>0 && (
                       <div style={{ marginTop:16 }}>
-                        <div className="f-cin" style={{ fontSize:12, color:part.color, textTransform:"uppercase", letterSpacing:1.5, marginBottom:10, fontWeight:600 }}>Practitioner Principles</div>
+                        <div className="f-mono" style={{ fontSize:10, color:part.color, textTransform:"uppercase", letterSpacing:1.5, marginBottom:10, fontWeight:500 }}>Practitioner Principles</div>
                         {part.principles.map((p,pi) => (
                           <div key={pi} style={{ padding:"12px 14px", background:`${part.color}06`, borderRadius:8, marginBottom:pi<part.principles.length-1?8:0, borderLeft:`2px solid ${part.color}25` }}>
-                            <div className="f-cin c-deep" style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>{p.title}</div>
+                            <div className="f-cin c-deep" style={{ fontSize:14, fontWeight:600, marginBottom:4 }}>{p.title}</div>
                             <p className="f-mont" style={{ fontSize:12, lineHeight:1.65, color:S.plum, margin:0 }}>{p.description}</p>
                           </div>
                         ))}
@@ -648,7 +774,7 @@ function ModalityClarityGuide() {
                 </div>
               </div>
             ))}
-            <div style={{ background:`${S.mist},0.06)`, borderRadius:12, padding:20, marginTop:8, border:`1px solid ${S.mist},0.1)` }}>
+            <div style={{ background:`${S.mist},0.04)`, borderRadius:12, padding:20, marginTop:8, border:`1px solid ${S.line2}` }}>
               <h4 className="f-cin" style={{ fontSize:14, fontWeight:600, color:S.terra, margin:"0 0 12px", textTransform:"uppercase", letterSpacing:1, textAlign:"center" }}>How to Use This</h4>
               <div style={{ display:"flex", gap:16, flexWrap:"wrap", justifyContent:"center" }}>
                 {["Start with the transformation.","Map each modality to a role.","Shape the client journey from start to integration."].map((step,i) => (
@@ -666,52 +792,52 @@ function ModalityClarityGuide() {
         {activeSection==="archetypes" && (
           <div>
             <div style={{ marginBottom:20 }}>
-              <h2 className="f-cin c-deep" style={{ fontSize:20, fontWeight:600, margin:"0 0 8px" }}>Starter Sessions</h2>
+              <h2 className="f-cin c-deep" style={{ fontSize:22, fontWeight:600, margin:"0 0 8px" }}>Starter Sessions</h2>
               <p className="f-mont" style={{ fontSize:13, color:S.plum, margin:0, lineHeight:1.6 }}>Sixteen session architectures built with roles instead of modalities. Tap any card to see the full role sequence, then load it into the builder and fill each role with your own tools.</p>
             </div>
             <div style={{ display:"flex", gap:4, marginBottom:20, flexWrap:"wrap" }}>
-              <button onClick={()=>setArchetypeFilter("all")} className="f-mont" style={{ padding:"7px 14px", borderRadius:16, border:"none", cursor:"pointer", fontSize:11, fontWeight:archetypeFilter==="all"?600:400, background:archetypeFilter==="all"?"#8B6F5E":`${S.mist},0.08)`, color:archetypeFilter==="all"?"#FFF":S.plum }}>All</button>
-              {CLUSTERS.map(c => (<button key={c.id} onClick={()=>setArchetypeFilter(c.id)} className="f-mont" style={{ padding:"7px 14px", borderRadius:16, border:"none", cursor:"pointer", fontSize:11, fontWeight:archetypeFilter===c.id?600:400, background:archetypeFilter===c.id?c.color:`${S.mist},0.08)`, color:archetypeFilter===c.id?"#FFF":S.plum }}>{c.label}</button>))}
+              <button onClick={()=>setArchetypeFilter("all")} className="f-mont" style={{ padding:"7px 14px", borderRadius:30, border:"none", cursor:"pointer", fontSize:11, fontWeight:archetypeFilter==="all"?600:400, background:archetypeFilter==="all"?S.copper:`${S.mist},0.06)`, color:archetypeFilter==="all"?S.btnText:S.plum }}>All</button>
+              {CLUSTERS.map(c => (<button key={c.id} onClick={()=>setArchetypeFilter(c.id)} className="f-mont" style={{ padding:"7px 14px", borderRadius:30, border:"none", cursor:"pointer", fontSize:11, fontWeight:archetypeFilter===c.id?600:400, background:archetypeFilter===c.id?c.color:`${S.mist},0.06)`, color:archetypeFilter===c.id?S.btnText:S.plum }}>{c.label}</button>))}
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               {SESSION_ARCHETYPES.filter(a=>archetypeFilter==="all"||a.cluster===archetypeFilter).map((arch,i) => {
                 const cluster=CLUSTERS.find(c=>c.id===arch.cluster); const isExp=expandedArchetype===arch.name;
                 return (
-                  <div key={i} style={{ gridColumn:isExp?"1 / -1":"auto", background:isExp?`${S.parch},0.7)`:`${S.parch},0.45)`, borderRadius:12, border:isExp?`2px solid ${cluster?.color||"#8B6F5E"}40`:`1px solid ${S.mist},0.1)`, overflow:"hidden", transition:"all 0.2s ease" }}>
+                  <div key={i} style={{ gridColumn:isExp?"1 / -1":"auto", background:isExp?S.surface:`${S.parch},0.55)`, borderRadius:12, border:isExp?`2px solid ${cluster?.color||S.copper}40`:`1px solid ${S.line2}`, overflow:"hidden", transition:"all 0.2s ease", backdropFilter:'blur(16px)', boxShadow:isExp?S.shadow:'none' }}>
                     <button onClick={()=>setExpandedArchetype(isExp?null:arch.name)} style={{ width:"100%", padding:16, background:"none", border:"none", cursor:"pointer", textAlign:"left" }}>
                       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6 }}>
-                        <h3 className="f-cin c-deep" style={{ fontSize:14, fontWeight:600, margin:0, lineHeight:1.3 }}>{arch.name}</h3>
-                        <span style={{ fontSize:12, color:cluster?.color||S.plum, transform:isExp?"rotate(180deg)":"rotate(0)", transition:"transform 0.2s ease", flexShrink:0, marginLeft:8 }}>▾</span>
+                        <h3 className="f-cin c-deep" style={{ fontSize:15, fontWeight:600, margin:0, lineHeight:1.3 }}>{arch.name}</h3>
+                        <span style={{ fontSize:12, color:cluster?.color||S.copper, transform:isExp?"rotate(180deg)":"rotate(0)", transition:"transform 0.2s ease", flexShrink:0, marginLeft:8 }}>▾</span>
                       </div>
-                      <div className="f-mont" style={{ fontSize:10, color:cluster?.color||S.plum, textTransform:"uppercase", letterSpacing:0.8, fontWeight:600, marginBottom:6 }}>{cluster?.label}</div>
-                      <p className="f-play" style={{ fontSize:11, color:S.plum, margin:0, lineHeight:1.4, fontStyle:"italic" }}>{arch.description}</p>
+                      <div className="f-mono" style={{ fontSize:9, color:cluster?.color||S.copper, textTransform:"uppercase", letterSpacing:1.2, fontWeight:500, marginBottom:6 }}>{cluster?.label}</div>
+                      <p className="f-play" style={{ fontSize:12, color:S.plum, margin:0, lineHeight:1.4, fontStyle:"italic" }}>{arch.description}</p>
                       {!isExp && (<div style={{display:"flex",gap:4,marginTop:8,flexWrap:"wrap"}}>{arch.roles.map((r,j)=>(<span key={j} className="f-mont" style={{fontSize:10,color:S.plum,background:`${S.mist},0.06)`,padding:"2px 6px",borderRadius:8}}>{ROLE_MAP[r.role]?.icon||"·"} {r.role}</span>))}</div>)}
                     </button>
                     {isExp && (
                       <div style={{ padding:"0 16px 16px" }}>
                         <div style={{ marginBottom:14 }}>
                           {arch.roles.map((r,j) => { const ri=ROLE_MAP[r.role]; return (
-                            <div key={j} style={{ padding:"10px 12px", background:`${S.mist},0.03)`, borderRadius:8, marginBottom:6, borderLeft:`2px solid ${cluster?.color||"#8B6F5E"}30` }}>
+                            <div key={j} style={{ padding:"10px 12px", background:`${S.mist},0.025)`, borderRadius:8, marginBottom:6, borderLeft:`2px solid ${cluster?.color||S.copper}30` }}>
                               <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                                 <span style={{ fontSize:14, color:cluster?.color }}>{ ri?.icon||"·"}</span>
-                                <span className="f-cin c-deep" style={{ fontSize:13, fontWeight:600 }}>{r.role}</span>
+                                <span className="f-cin c-deep" style={{ fontSize:14, fontWeight:600 }}>{r.role}</span>
                               </div>
                               <p className="f-mont" style={{ fontSize:12, color:S.plum, margin:"0 0 6px", lineHeight:1.5, paddingLeft:22 }}>{r.job}</p>
-                              {ri && (<div style={{display:"flex",gap:4,flexWrap:"wrap",paddingLeft:22}}>{ri.modalities.map((m,k)=>(<span key={k} className="f-mont" style={{fontSize:10,color:cluster?.color||S.plum,background:`${cluster?.color||"#8B6F5E"}10`,padding:"2px 8px",borderRadius:10,border:`1px solid ${cluster?.color||"#8B6F5E"}15`}}>{m}</span>))}</div>)}
+                              {ri && (<div style={{display:"flex",gap:4,flexWrap:"wrap",paddingLeft:22}}>{ri.modalities.map((m,k)=>(<span key={k} className="f-mont" style={{fontSize:10,color:cluster?.color||S.copper,background:`${cluster?.color||S.copper}10`,padding:"2px 8px",borderRadius:10,border:`1px solid ${cluster?.color||S.copper}15`}}>{m}</span>))}</div>)}
                             </div>
                           );})}
                         </div>
                         <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
-                          <div style={{ flex:"1 1 200px", padding:"10px 12px", background:`${S.sage}05`, borderRadius:6 }}>
-                            <div className="f-mont" style={{ fontSize:10, color:S.sage, textTransform:"uppercase", letterSpacing:0.5, fontWeight:600, marginBottom:4 }}>Best for</div>
-                            <p className="f-mont" style={{ fontSize:11, color:"#1a4a4a", margin:0, lineHeight:1.5 }}>{arch.bestFor}</p>
+                          <div style={{ flex:"1 1 200px", padding:"10px 12px", background:`rgba(44,95,90,0.05)`, borderRadius:6 }}>
+                            <div className="f-mono" style={{ fontSize:9, color:S.sage, textTransform:"uppercase", letterSpacing:1, fontWeight:500, marginBottom:4 }}>Best for</div>
+                            <p className="f-mont" style={{ fontSize:11, color:S.deep, margin:0, lineHeight:1.5 }}>{arch.bestFor}</p>
                           </div>
-                          <div style={{ flex:"1 1 200px", padding:"10px 12px", background:"rgba(160,120,90,0.04)", borderRadius:6 }}>
-                            <div className="f-mont" style={{ fontSize:10, color:S.terra, textTransform:"uppercase", letterSpacing:0.5, fontWeight:600, marginBottom:4 }}>Boundary check</div>
-                            <p className="f-mont" style={{ fontSize:11, color:"#1a4a4a", margin:0, lineHeight:1.5 }}>{arch.boundaryCheck}</p>
+                          <div style={{ flex:"1 1 200px", padding:"10px 12px", background:"rgba(196,87,31,0.04)", borderRadius:6 }}>
+                            <div className="f-mono" style={{ fontSize:9, color:S.terra, textTransform:"uppercase", letterSpacing:1, fontWeight:500, marginBottom:4 }}>Boundary check</div>
+                            <p className="f-mont" style={{ fontSize:11, color:S.deep, margin:0, lineHeight:1.5 }}>{arch.boundaryCheck}</p>
                           </div>
                         </div>
-                        <button onClick={()=>{setLoadedArchetype(arch);setActiveSection("builder");}} className="f-mont" style={{ padding:"8px 18px", borderRadius:16, border:`1px solid ${cluster?.color||"#8B6F5E"}40`, background:"transparent", color:cluster?.color||"#8B6F5E", fontSize:12, fontWeight:600, cursor:"pointer" }}>Load Into Builder →</button>
+                        <button onClick={()=>{setLoadedArchetype(arch);setActiveSection("builder");}} className="f-mont" style={{ padding:"8px 18px", borderRadius:30, border:`1px solid ${cluster?.color||S.copper}40`, background:"transparent", color:cluster?.color||S.copper, fontSize:12, fontWeight:600, cursor:"pointer" }}>Load Into Builder →</button>
                       </div>
                     )}
                   </div>
@@ -725,7 +851,7 @@ function ModalityClarityGuide() {
         {activeSection==="builder" && (
           <div>
             <div style={{ marginBottom:24 }}>
-              <h2 className="f-cin c-deep" style={{ fontSize:20, fontWeight:600, margin:"0 0 8px" }}>Design Your Session</h2>
+              <h2 className="f-cin c-deep" style={{ fontSize:22, fontWeight:600, margin:"0 0 8px" }}>Design Your Session</h2>
               <p className="f-mont" style={{ fontSize:13, color:S.plum, margin:0, lineHeight:1.6 }}>This is your design table. Choose your modalities, arrange them in order, and see how they fit together. Remember the mixing principles as you build.</p>
             </div>
             <SessionBuilder loadedArchetype={loadedArchetype} onClearArchetype={() => setLoadedArchetype(null)} />
@@ -734,15 +860,15 @@ function ModalityClarityGuide() {
       </div>
 
       {/* Footer */}
-      <footer className="f-mont" style={{ marginTop:40, padding:"24px 20px 32px", borderTop:`1px solid ${S.mist},0.14)`, textAlign:"center", fontSize:13, lineHeight:1.9, color:S.plum, background:`${S.parch},0.28)` }}>
+      <footer className="f-mont" style={{ marginTop:40, padding:"24px 20px 32px", borderTop:`1px solid ${S.line2}`, textAlign:"center", fontSize:13, lineHeight:1.9, color:S.plum, background:`${S.parch},0.28)`, position:'relative', zIndex:1 }}>
         <div style={{ display:"flex", justifyContent:"center", gap:8, flexWrap:"wrap", marginBottom:8 }}>
-          <a href="https://www.sunnysink.com/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color:S.gold, textDecoration:"none", fontWeight:600, letterSpacing:".06em", textTransform:"uppercase", fontSize:11.5 }}>Privacy Policy</a>
-          <span style={{ color:`${S.mist},0.20)` }}>|</span>
-          <a href="https://www.sunnysink.com/terms-conditions" target="_blank" rel="noopener noreferrer" style={{ color:S.gold, textDecoration:"none", fontWeight:600, letterSpacing:".06em", textTransform:"uppercase", fontSize:11.5 }}>Terms &amp; Conditions</a>
+          <a href="https://www.sunnysink.com/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ color:S.copper, textDecoration:"none", fontWeight:600, letterSpacing:".06em", textTransform:"uppercase", fontSize:11.5 }}>Privacy Policy</a>
+          <span style={{ color:S.line2 }}>|</span>
+          <a href="https://www.sunnysink.com/terms-conditions" target="_blank" rel="noopener noreferrer" style={{ color:S.copper, textDecoration:"none", fontWeight:600, letterSpacing:".06em", textTransform:"uppercase", fontSize:11.5 }}>Terms &amp; Conditions</a>
         </div>
         <div>© 2026 S Sink Coaching</div>
         <div>PO Box 1651 Gillette, WY 82717-1651</div>
-        <div><a href="mailto:support@sunnysink.com" style={{ color:S.gold, textDecoration:"none" }}>support@sunnysink.com</a></div>
+        <div><a href="mailto:support@sunnysink.com" style={{ color:S.copper, textDecoration:"none" }}>support@sunnysink.com</a></div>
       </footer>
     </div>
   );

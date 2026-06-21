@@ -490,8 +490,9 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
   const [exportText, setExportText] = useState("");
   const [copied, setCopied] = useState(false);
   const [activeArchetype, setActiveArchetype] = useState(null);
+  const [roleAssignments, setRoleAssignments] = useState({});
 
-  useEffect(() => { if (loadedArchetype && loadedArchetype !== activeArchetype) { setSessionFrame(loadedArchetype.name); setSessionName(""); setSessionIntent(""); setActiveArchetype(loadedArchetype); setFlowOrder([]); setCustomModData({}); setBoundaryWho(""); setBoundaryScope(""); setBoundaryPrepared(""); setShowExportText(false); } }, [loadedArchetype]);
+  useEffect(() => { if (loadedArchetype && loadedArchetype !== activeArchetype) { setSessionFrame(loadedArchetype.name); setSessionName(""); setSessionIntent(""); setActiveArchetype(loadedArchetype); setFlowOrder([]); setCustomModData({}); setBoundaryWho(""); setBoundaryScope(""); setBoundaryPrepared(""); setShowExportText(false); setRoleAssignments({}); } }, [loadedArchetype]);
 
   const addMod = (modId) => { if(flowOrder.length<8) setFlowOrder([...flowOrder, modId+"__"+Date.now()]); };
   const getModCount = (modId) => flowOrder.filter(id=>id.split("__")[0]===modId).length;
@@ -500,6 +501,48 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
   const getModData = (instId) => instId.startsWith("custom_")?customModData[instId]:MODALITIES.find(m=>m.id===instId.split("__")[0]);
   const moveInFlow = (index,direction) => { const f=[...flowOrder]; const s=index+direction; if(s>=0&&s<f.length){[f[index],f[s]]=[f[s],f[index]];setFlowOrder(f);} };
   const getRole = (index,total) => { if(total===1) return "Spine"; if(index===0) return "Opens"; if(index===total-1) return "Closes"; return "Deepens"; };
+
+  const getModsForRole = (roleName) => {
+    const primary = MODALITIES.filter(m => m.canFill && m.canFill.includes(roleName));
+    const secondary = MODALITIES.filter(m => !m.canFill || !m.canFill.includes(roleName));
+    return { primary, secondary };
+  };
+
+  const assignRole = (roleIndex, modId) => {
+    const newAssignments = {...roleAssignments};
+    const currentId = newAssignments[roleIndex];
+    const currentBase = currentId?.split("__")[0];
+    if (modId === "__clear__" || currentBase === modId) {
+      if (currentId?.startsWith("custom_")) { const d={...customModData}; delete d[currentId]; setCustomModData(d); }
+      delete newAssignments[roleIndex];
+    } else {
+      if (currentId?.startsWith("custom_")) { const d={...customModData}; delete d[currentId]; setCustomModData(d); }
+      newAssignments[roleIndex] = modId + "__role_" + roleIndex + "_" + Date.now();
+    }
+    setRoleAssignments(newAssignments);
+    const newFlow = [];
+    if (activeArchetype) {
+      activeArchetype.roles.forEach((_, i) => {
+        if (newAssignments[i]) newFlow.push(newAssignments[i]);
+      });
+    }
+    setFlowOrder(newFlow);
+  };
+
+  const assignCustomRole = (roleIndex, name) => {
+    const id = "custom_" + Date.now();
+    const newCustom = {...customModData, [id]: {id, name: name.trim(), icon:"○", color:S.mauve}};
+    setCustomModData(newCustom);
+    const newAssignments = {...roleAssignments, [roleIndex]: id};
+    setRoleAssignments(newAssignments);
+    const newFlow = [];
+    if (activeArchetype) {
+      activeArchetype.roles.forEach((_, i) => {
+        if (newAssignments[i]) newFlow.push(newAssignments[i]);
+      });
+    }
+    setFlowOrder(newFlow);
+  };
 
   const generateExportText = () => {
     const L=[];
@@ -520,73 +563,152 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
 
   const inputStyle = { width:"100%", padding:"12px 16px", borderRadius:8, border:`1px solid ${S.line}`, background:`${S.parch},0.6)`, fontFamily:S.sans, fontSize:14, color:S.deep, outline:"none", boxSizing:"border-box" };
 
+  const [roleCustomInput, setRoleCustomInput] = useState(null);
+  const [roleCustomName, setRoleCustomName] = useState("");
+
   return (
     <div>
-      <p className="f-mont" style={{fontSize:14,lineHeight:1.7,color:S.plum,margin:"0 0 20px"}}>Select your modalities and arrange them in session order. The first opens, the middle layers deepen, and the last closes. Every modality you include should earn its place in the transformation.</p>
-
-      <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Name</label><input type="text" value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="e.g., The Reclamation Session, Full Moon Unveiling Circle" style={inputStyle}/></div>
-      <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Frame</label><input type="text" value={sessionFrame} onChange={e=>setSessionFrame(e.target.value)} placeholder="e.g., Full Moon in Leo, Spring Equinox, Saturn Return" style={inputStyle}/><p className="f-play" style={{fontSize:12,color:S.faint,margin:"6px 0 0",fontStyle:"italic",lineHeight:1.5}}>The sacred container or cosmic moment that holds the session.</p></div>
-      <div style={{marginBottom:24}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>What transformation do you provide in this session?</label><input type="text" value={sessionIntent} onChange={e=>setSessionIntent(e.target.value)} placeholder="e.g., Help my client step into visibility and own their voice" style={inputStyle}/></div>
-
-      <div style={{marginBottom:8}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Select Your Modalities</label></div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))",gap:8,marginBottom:12}}>
-        {MODALITIES.map(mod => { const cnt=getModCount(mod.id); const dis=flowOrder.length>=8; return (
-          <button key={mod.id} onClick={()=>!dis&&addMod(mod.id)} style={{padding:12,borderRadius:10,border:cnt>0?`2px solid ${mod.color}`:`1px solid ${S.line2}`,background:cnt>0?`${mod.color}12`:S.surface,cursor:dis?"default":"pointer",opacity:dis?0.4:1,display:"flex",alignItems:"center",gap:8,transition:"all 0.2s ease",textAlign:"left",position:"relative",backdropFilter:'blur(12px)'}}>
-            <span style={{fontSize:18,color:mod.color}}>{mod.icon}</span>
-            <span className="f-mont" style={{fontSize:12,color:S.deep,fontWeight:cnt>0?600:400}}>{mod.name.split(" & ")[0]}</span>
-            {cnt>0 && <span style={{position:"absolute",top:-6,right:-6,background:mod.color,color:S.btnText,fontSize:10,fontFamily:S.sans,fontWeight:700,width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</span>}
-          </button>
-        );})}
-      </div>
-
-      {/* Custom modality */}
-      <div style={{marginBottom:24}}>
-        {!showCustomInput ? (
-          <button onClick={()=>flowOrder.length<8&&setShowCustomInput(true)} className="f-mont" style={{padding:"12px 16px",borderRadius:10,border:`1px dashed ${S.line}`,background:"transparent",cursor:flowOrder.length>=8?"default":"pointer",opacity:flowOrder.length>=8?0.4:1,display:"flex",alignItems:"center",gap:8,fontSize:12,color:S.plum,width:"100%"}}>
-            <span style={{fontSize:16}}>+</span> Add another modality (EFT, Human Design, Akashic Records, NLP, etc.)
-          </button>
-        ) : (
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <input type="text" value={customName} onChange={e=>setCustomName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomMod()} placeholder="Type your modality name..." autoFocus style={{...inputStyle,flex:1}}/>
-            <button onClick={addCustomMod} className="f-mont" style={{padding:"12px 20px",borderRadius:8,border:"none",background:S.copper,color:S.btnText,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>Add</button>
-            <button onClick={()=>{setShowCustomInput(false);setCustomName("");}} style={{padding:12,borderRadius:8,border:"none",background:"transparent",color:S.terra,fontSize:16,cursor:"pointer"}}>×</button>
-          </div>
-        )}
-        {flowOrder.filter(id=>id.startsWith("custom_")).map(id=>customModData[id]).filter(Boolean).length>0 && (
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
-            {flowOrder.filter(id=>id.startsWith("custom_")).map(id=>customModData[id]).filter(Boolean).map(cm=>(
-              <span key={cm.id} className="f-mont" style={{padding:"6px 12px",borderRadius:16,background:`${S.mist},0.06)`,border:`1px solid ${S.line2}`,fontSize:12,color:S.plum,display:"flex",alignItems:"center",gap:6}}>
-                ○ {cm.name} <button onClick={()=>removeFromFlow(cm.id)} style={{background:"none",border:"none",cursor:"pointer",color:S.terra,fontSize:14,padding:"0 2px"}}>×</button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Role guide from archetype */}
-      {activeArchetype && (
-        <div style={{background:`${S.mist},0.04)`,borderRadius:12,padding:18,marginBottom:20,border:`1px solid ${S.line2}`,backdropFilter:'blur(12px)'}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-            <h4 className="f-cin" style={{fontSize:15,color:S.copper,margin:0,fontWeight:600}}>✦ Role Guide: {activeArchetype.name}</h4>
-            <button onClick={()=>{setActiveArchetype(null);onClearArchetype&&onClearArchetype();}} className="f-mont" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:S.plum}}>clear</button>
-          </div>
-          <p className="f-play" style={{fontSize:13,color:S.plum,margin:"0 0 12px",fontStyle:"italic",lineHeight:1.5}}>Assign your own modalities to fill each role below. The role describes the job. You choose the tool.</p>
-          {activeArchetype.roles.map((r,i)=>(
-            <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",marginBottom:i<activeArchetype.roles.length-1?10:0,paddingBottom:i<activeArchetype.roles.length-1?10:0,borderBottom:i<activeArchetype.roles.length-1?`1px solid ${S.line2}`:"none"}}>
-              <span className="f-cin" style={{fontSize:14,color:S.copper,opacity:0.5,flexShrink:0,width:20,marginTop:1}}>{i+1}.</span>
-              <div>
-                <div className="f-cin c-deep" style={{fontSize:14,fontWeight:600,marginBottom:2}}>{r.role}</div>
-                <div className="f-mont" style={{fontSize:12,color:S.plum,lineHeight:1.5}}>{r.job}</div>
-                {ROLE_MAP[r.role] && (<div style={{display:"flex",gap:3,flexWrap:"wrap",marginTop:6}}>{ROLE_MAP[r.role].modalities.map((m,mi)=>(<span key={mi} className="f-mont" style={{fontSize:10,color:S.plum,background:`${S.mist},0.06)`,padding:"2px 7px",borderRadius:8}}>{m}</span>))}</div>)}
-              </div>
+      {activeArchetype ? (
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
+            <div>
+              <h4 className="f-cin" style={{fontSize:18,color:S.copper,margin:"0 0 6px",fontWeight:600}}>✦ {activeArchetype.name}</h4>
+              <p className="f-play" style={{fontSize:13,color:S.plum,margin:0,fontStyle:"italic",lineHeight:1.5}}>Select your modality for each role. The role describes the job. You choose the tool.</p>
             </div>
-          ))}
+            <button onClick={()=>{setActiveArchetype(null);setRoleAssignments({});setFlowOrder([]);onClearArchetype&&onClearArchetype();}} className="f-mont" style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:S.plum,flexShrink:0,marginLeft:12,padding:"4px 8px"}}>✕ clear</button>
+          </div>
+
+          <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Name</label><input type="text" value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="e.g., The Reclamation Session, Full Moon Unveiling Circle" style={inputStyle}/></div>
+          <div style={{marginBottom:24}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>What transformation do you provide in this session?</label><input type="text" value={sessionIntent} onChange={e=>setSessionIntent(e.target.value)} placeholder="e.g., Help my client step into visibility and own their voice" style={inputStyle}/></div>
+
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+            {activeArchetype.roles.map((r,i) => {
+              const { primary, secondary } = getModsForRole(r.role);
+              const assignedId = roleAssignments[i];
+              const assignedBase = assignedId?.split("__")[0];
+              const assignedMod = assignedId ? getModData(assignedId) : null;
+              const cluster = CLUSTERS.find(c=>c.id===activeArchetype.cluster);
+              const clusterColor = cluster?.color || S.copper;
+              const isCustomAssigned = assignedId?.startsWith("custom_");
+
+              return (
+                <div key={i} style={{background:assignedMod?`${(assignedMod.color||S.copper)}08`:S.surface,borderRadius:12,border:assignedMod?`2px solid ${(assignedMod.color||S.copper)}30`:`1px solid ${S.line2}`,overflow:"hidden",transition:"all 0.25s ease",backdropFilter:'blur(16px)'}}>
+                  <div style={{padding:"14px 16px",borderBottom:assignedMod?"none":`1px solid ${S.line2}`}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                      <span className="f-cin" style={{fontSize:15,color:clusterColor,opacity:0.5,flexShrink:0,width:22,fontWeight:600}}>{i+1}.</span>
+                      <div style={{flex:1}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:14,color:clusterColor}}>{ROLE_MAP[r.role]?.icon||"·"}</span>
+                          <span className="f-cin c-deep" style={{fontSize:15,fontWeight:600}}>{r.role}</span>
+                          {assignedMod && (
+                            <span className="f-mont" style={{fontSize:11,color:assignedMod.color||S.copper,background:`${(assignedMod.color||S.copper)}15`,padding:"2px 10px",borderRadius:20,fontWeight:600,display:"flex",alignItems:"center",gap:4}}>
+                              <span style={{fontSize:13}}>{assignedMod.icon||"○"}</span> {assignedMod.name?.split(" & ")[0]||assignedMod.name}
+                            </span>
+                          )}
+                        </div>
+                        <p className="f-mont" style={{fontSize:12,color:S.plum,margin:"4px 0 0",lineHeight:1.5,paddingLeft:22}}>{r.job}</p>
+                      </div>
+                    </div>
+
+                    <div style={{paddingLeft:32,marginTop:10}}>
+                      {primary.length > 0 && (
+                        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:secondary.length>0?6:0}}>
+                          {primary.map(mod => {
+                            const isSelected = assignedBase === mod.id;
+                            return (
+                              <button key={mod.id} onClick={()=>assignRole(i, mod.id)} className="f-mont" style={{padding:"6px 12px",borderRadius:20,border:isSelected?`2px solid ${mod.color}`:`1px solid ${mod.color}30`,background:isSelected?`${mod.color}18`:"transparent",cursor:"pointer",fontSize:11,fontWeight:isSelected?600:400,color:isSelected?mod.color:S.plum,display:"flex",alignItems:"center",gap:5,transition:"all 0.2s ease"}}>
+                                <span style={{fontSize:13,color:mod.color}}>{mod.icon}</span>
+                                {mod.name.split(" & ")[0]}
+                                {isSelected && <span style={{fontSize:11,marginLeft:2}}>✓</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                        {secondary.map(mod => {
+                          const isSelected = assignedBase === mod.id;
+                          return (
+                            <button key={mod.id} onClick={()=>assignRole(i, mod.id)} className="f-mont" style={{padding:"5px 10px",borderRadius:20,border:isSelected?`2px solid ${mod.color}`:`1px solid ${S.line2}`,background:isSelected?`${mod.color}18`:`${S.mist},0.03)`,cursor:"pointer",fontSize:10,fontWeight:isSelected?600:400,color:isSelected?mod.color:S.faint,display:"flex",alignItems:"center",gap:4,transition:"all 0.2s ease",opacity:isSelected?1:0.7}}>
+                              <span style={{fontSize:11,color:isSelected?mod.color:S.faint}}>{mod.icon}</span>
+                              {mod.name.split(" & ")[0]}
+                              {isSelected && <span style={{fontSize:10,marginLeft:2}}>✓</span>}
+                            </button>
+                          );
+                        })}
+                        {roleCustomInput === i ? (
+                          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                            <input type="text" value={roleCustomName} onChange={e=>setRoleCustomName(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&roleCustomName.trim()){assignCustomRole(i,roleCustomName);setRoleCustomInput(null);setRoleCustomName("");}}} placeholder="Your modality..." autoFocus style={{padding:"5px 10px",borderRadius:8,border:`1px solid ${S.line}`,background:`${S.parch},0.6)`,fontFamily:S.sans,fontSize:11,color:S.deep,outline:"none",width:130}}/>
+                            <button onClick={()=>{if(roleCustomName.trim()){assignCustomRole(i,roleCustomName);setRoleCustomInput(null);setRoleCustomName("");}}} className="f-mont" style={{padding:"5px 10px",borderRadius:8,border:"none",background:S.copper,color:S.btnText,fontSize:10,cursor:"pointer"}}>Add</button>
+                            <button onClick={()=>{setRoleCustomInput(null);setRoleCustomName("");}} style={{background:"none",border:"none",cursor:"pointer",color:S.terra,fontSize:13,padding:"2px 4px"}}>×</button>
+                          </div>
+                        ) : (
+                          <button onClick={()=>setRoleCustomInput(i)} className="f-mont" style={{padding:"5px 10px",borderRadius:20,border:`1px dashed ${S.line}`,background:"transparent",cursor:"pointer",fontSize:10,color:S.faint,display:"flex",alignItems:"center",gap:4}}>
+                            <span>+</span> Other
+                          </button>
+                        )}
+                        {isCustomAssigned && assignedMod && (
+                          <span className="f-mont" style={{padding:"5px 10px",borderRadius:20,border:`2px solid ${S.mauve}`,background:`${S.mauve}18`,fontSize:10,fontWeight:600,color:S.mauve,display:"flex",alignItems:"center",gap:4}}>
+                            ○ {assignedMod.name} ✓
+                            <button onClick={()=>assignRole(i, "__clear__")} style={{background:"none",border:"none",cursor:"pointer",color:S.terra,fontSize:11,padding:"0 2px",marginLeft:2}}>×</button>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {activeArchetype.boundaryCheck && (
-            <div style={{marginTop:12,padding:"10px 12px",background:"rgba(196,87,31,0.06)",borderRadius:6,borderLeft:`3px solid rgba(196,87,31,0.25)`}}>
+            <div style={{marginBottom:20,padding:"10px 12px",background:"rgba(196,87,31,0.06)",borderRadius:6,borderLeft:`3px solid rgba(196,87,31,0.25)`}}>
               <div className="f-mono" style={{fontSize:10,color:S.terra,textTransform:"uppercase",letterSpacing:1.5,marginBottom:4,fontWeight:500}}>Boundary Check</div>
               <p className="f-mont" style={{fontSize:12,color:S.plum,margin:0,lineHeight:1.6}}>{activeArchetype.boundaryCheck}</p>
             </div>
           )}
+        </div>
+      ) : (
+        <div>
+          <p className="f-mont" style={{fontSize:14,lineHeight:1.7,color:S.plum,margin:"0 0 20px"}}>Select your modalities and arrange them in session order. The first opens, the middle layers deepen, and the last closes. Every modality you include should earn its place in the transformation.</p>
+
+          <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Name</label><input type="text" value={sessionName} onChange={e=>setSessionName(e.target.value)} placeholder="e.g., The Reclamation Session, Full Moon Unveiling Circle" style={inputStyle}/></div>
+          <div style={{marginBottom:16}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Session Frame</label><input type="text" value={sessionFrame} onChange={e=>setSessionFrame(e.target.value)} placeholder="e.g., Full Moon in Leo, Spring Equinox, Saturn Return" style={inputStyle}/><p className="f-play" style={{fontSize:12,color:S.faint,margin:"6px 0 0",fontStyle:"italic",lineHeight:1.5}}>The sacred container or cosmic moment that holds the session.</p></div>
+          <div style={{marginBottom:24}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>What transformation do you provide in this session?</label><input type="text" value={sessionIntent} onChange={e=>setSessionIntent(e.target.value)} placeholder="e.g., Help my client step into visibility and own their voice" style={inputStyle}/></div>
+
+          <div style={{marginBottom:8}}><label className="f-cin" style={{fontSize:14,color:S.plum,display:"block",marginBottom:8,fontWeight:600}}>Select Your Modalities</label></div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(160px, 1fr))",gap:8,marginBottom:12}}>
+            {MODALITIES.map(mod => { const cnt=getModCount(mod.id); const dis=flowOrder.length>=8; return (
+              <button key={mod.id} onClick={()=>!dis&&addMod(mod.id)} style={{padding:12,borderRadius:10,border:cnt>0?`2px solid ${mod.color}`:`1px solid ${S.line2}`,background:cnt>0?`${mod.color}12`:S.surface,cursor:dis?"default":"pointer",opacity:dis?0.4:1,display:"flex",alignItems:"center",gap:8,transition:"all 0.2s ease",textAlign:"left",position:"relative",backdropFilter:'blur(12px)'}}>
+                <span style={{fontSize:18,color:mod.color}}>{mod.icon}</span>
+                <span className="f-mont" style={{fontSize:12,color:S.deep,fontWeight:cnt>0?600:400}}>{mod.name.split(" & ")[0]}</span>
+                {cnt>0 && <span style={{position:"absolute",top:-6,right:-6,background:mod.color,color:S.btnText,fontSize:10,fontFamily:S.sans,fontWeight:700,width:20,height:20,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</span>}
+              </button>
+            );})}
+          </div>
+
+          <div style={{marginBottom:24}}>
+            {!showCustomInput ? (
+              <button onClick={()=>flowOrder.length<8&&setShowCustomInput(true)} className="f-mont" style={{padding:"12px 16px",borderRadius:10,border:`1px dashed ${S.line}`,background:"transparent",cursor:flowOrder.length>=8?"default":"pointer",opacity:flowOrder.length>=8?0.4:1,display:"flex",alignItems:"center",gap:8,fontSize:12,color:S.plum,width:"100%"}}>
+                <span style={{fontSize:16}}>+</span> Add another modality (EFT, Human Design, Akashic Records, NLP, etc.)
+              </button>
+            ) : (
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <input type="text" value={customName} onChange={e=>setCustomName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addCustomMod()} placeholder="Type your modality name..." autoFocus style={{...inputStyle,flex:1}}/>
+                <button onClick={addCustomMod} className="f-mont" style={{padding:"12px 20px",borderRadius:8,border:"none",background:S.copper,color:S.btnText,fontSize:13,cursor:"pointer",whiteSpace:"nowrap"}}>Add</button>
+                <button onClick={()=>{setShowCustomInput(false);setCustomName("");}} style={{padding:12,borderRadius:8,border:"none",background:"transparent",color:S.terra,fontSize:16,cursor:"pointer"}}>×</button>
+              </div>
+            )}
+            {flowOrder.filter(id=>id.startsWith("custom_")).map(id=>customModData[id]).filter(Boolean).length>0 && (
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}}>
+                {flowOrder.filter(id=>id.startsWith("custom_")).map(id=>customModData[id]).filter(Boolean).map(cm=>(
+                  <span key={cm.id} className="f-mont" style={{padding:"6px 12px",borderRadius:16,background:`${S.mist},0.06)`,border:`1px solid ${S.line2}`,fontSize:12,color:S.plum,display:"flex",alignItems:"center",gap:6}}>
+                    ○ {cm.name} <button onClick={()=>removeFromFlow(cm.id)} style={{background:"none",border:"none",cursor:"pointer",color:S.terra,fontSize:14,padding:"0 2px"}}>×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -602,16 +724,17 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
             const role=getRole(index,flowOrder.length); const isC=modId.startsWith("custom_"); const mc=mod.color||S.copper;
             return (
               <div key={modId} style={{display:"flex",alignItems:"center",gap:12,padding:14,background:`${mc}08`,borderRadius:8,marginBottom:8,border:`1px solid ${mc}20`,borderLeft:`3px solid ${mc}`}}>
-                <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                {!activeArchetype && <div style={{display:"flex",flexDirection:"column",gap:2}}>
                   <button onClick={()=>moveInFlow(index,-1)} disabled={index===0} style={{background:"none",border:"none",cursor:index===0?"default":"pointer",opacity:index===0?0.2:0.6,fontSize:10,padding:"2px 4px",color:S.plum}}>▲</button>
                   <button onClick={()=>moveInFlow(index,1)} disabled={index===flowOrder.length-1} style={{background:"none",border:"none",cursor:index===flowOrder.length-1?"default":"pointer",opacity:index===flowOrder.length-1?0.2:0.6,fontSize:10,padding:"2px 4px",color:S.plum}}>▼</button>
-                </div>
+                </div>}
                 <span style={{fontSize:isC?16:20,color:mc,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",background:`${mc}15`,borderRadius:"50%",flexShrink:0}}>{mod.icon||"○"}</span>
                 <div style={{flex:1}}>
                   <div className="f-cin c-deep" style={{fontSize:14,fontWeight:600}}>{mod.name}</div>
-                  <div className="f-play" style={{fontSize:12,color:mc,fontStyle:"italic"}}>{role}{!isC&&mod.sequencing?` · ${mod.sequencing.position}`:""}</div>
+                  <div className="f-play" style={{fontSize:12,color:mc,fontStyle:"italic"}}>{activeArchetype ? (activeArchetype.roles[index]?.role || role) : role}{!isC&&mod.sequencing&&!activeArchetype?` · ${mod.sequencing.position}`:""}</div>
+                  {activeArchetype && activeArchetype.roles[index] && <div className="f-mont" style={{fontSize:11,color:S.plum,marginTop:2,lineHeight:1.4}}>{activeArchetype.roles[index].job}</div>}
                 </div>
-                <button onClick={()=>removeFromFlow(modId)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,color:S.terra,opacity:0.5,padding:"4px 8px"}}>×</button>
+                {!activeArchetype && <button onClick={()=>removeFromFlow(modId)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,color:S.terra,opacity:0.5,padding:"4px 8px"}}>×</button>}
               </div>
             );
           })}
@@ -651,8 +774,11 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
         </div>
       )}
 
-      {flowOrder.length===0 && (
+      {flowOrder.length===0 && !activeArchetype && (
         <div className="f-play" style={{textAlign:"center",padding:32,color:S.faint,fontSize:15,fontStyle:"italic"}}>Select your first modality to begin designing your session flow</div>
+      )}
+      {activeArchetype && flowOrder.length < activeArchetype.roles.length && (
+        <div className="f-play" style={{textAlign:"center",padding:24,color:S.faint,fontSize:14,fontStyle:"italic"}}>{flowOrder.length === 0 ? "Select a modality for each role above to build your session flow" : `${flowOrder.length} of ${activeArchetype.roles.length} roles assigned`}</div>
       )}
     </div>
   );

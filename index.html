@@ -73,7 +73,17 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useCallback } = React;
+
+/* ── localStorage persistence ── */
+const STORAGE_KEY = 'mcg_state';
+function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; } }
+function saveState(patch) { try { const s = loadState(); Object.assign(s, patch); localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {} }
+function usePersisted(key, initial) {
+  const [val, setVal] = useState(() => { const s = loadState(); return s[key] !== undefined ? s[key] : initial; });
+  useEffect(() => { saveState({ [key]: val }); }, [key, val]);
+  return [val, setVal];
+}
 
 /* ── shared style fragments — FORGE AT DAWN ── */
 const S = {
@@ -476,23 +486,23 @@ function ModalityCard({ mod, isExpanded, onToggle }) {
 }
 
 function SessionBuilder({ loadedArchetype, onClearArchetype }) {
-  const [flowOrder, setFlowOrder] = useState([]);
-  const [customModData, setCustomModData] = useState({});
+  const [flowOrder, setFlowOrder] = usePersisted('flowOrder', []);
+  const [customModData, setCustomModData] = usePersisted('customModData', {});
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customName, setCustomName] = useState("");
-  const [sessionName, setSessionName] = useState("");
-  const [sessionFrame, setSessionFrame] = useState("");
-  const [sessionIntent, setSessionIntent] = useState("");
-  const [boundaryWho, setBoundaryWho] = useState("");
-  const [boundaryScope, setBoundaryScope] = useState("");
-  const [boundaryPrepared, setBoundaryPrepared] = useState("");
+  const [sessionName, setSessionName] = usePersisted('sessionName', "");
+  const [sessionFrame, setSessionFrame] = usePersisted('sessionFrame', "");
+  const [sessionIntent, setSessionIntent] = usePersisted('sessionIntent', "");
+  const [boundaryWho, setBoundaryWho] = usePersisted('boundaryWho', "");
+  const [boundaryScope, setBoundaryScope] = usePersisted('boundaryScope', "");
+  const [boundaryPrepared, setBoundaryPrepared] = usePersisted('boundaryPrepared', "");
   const [showExportText, setShowExportText] = useState(false);
   const [exportText, setExportText] = useState("");
   const [copied, setCopied] = useState(false);
-  const [activeArchetype, setActiveArchetype] = useState(null);
-  const [roleAssignments, setRoleAssignments] = useState({});
+  const [activeArchetype, setActiveArchetype] = usePersisted('activeArchetype', null);
+  const [roleAssignments, setRoleAssignments] = usePersisted('roleAssignments', {});
 
-  useEffect(() => { if (loadedArchetype && loadedArchetype !== activeArchetype) { setSessionFrame(loadedArchetype.name); setSessionName(""); setSessionIntent(""); setActiveArchetype(loadedArchetype); setFlowOrder([]); setCustomModData({}); setBoundaryWho(""); setBoundaryScope(""); setBoundaryPrepared(""); setShowExportText(false); setRoleAssignments({}); } }, [loadedArchetype]);
+  useEffect(() => { if (loadedArchetype && (!activeArchetype || loadedArchetype.name !== activeArchetype.name)) { setSessionFrame(loadedArchetype.name); setSessionName(""); setSessionIntent(""); setActiveArchetype(loadedArchetype); setFlowOrder([]); setCustomModData({}); setBoundaryWho(""); setBoundaryScope(""); setBoundaryPrepared(""); setShowExportText(false); setRoleAssignments({}); } }, [loadedArchetype]);
 
   const addMod = (modId) => { if(flowOrder.length<8) setFlowOrder([...flowOrder, modId+"__"+Date.now()]); };
   const getModCount = (modId) => flowOrder.filter(id=>id.split("__")[0]===modId).length;
@@ -787,9 +797,9 @@ function SessionBuilder({ loadedArchetype, onClearArchetype }) {
 /* ── MAIN APP ── */
 
 function ModalityClarityGuide() {
-  const [activeSection, setActiveSection] = useState("intro");
+  const [activeSection, setActiveSection] = usePersisted('activeSection', "intro");
   const [expandedMod, setExpandedMod] = useState(null);
-  const [loadedArchetype, setLoadedArchetype] = useState(null);
+  const [loadedArchetype, setLoadedArchetype] = usePersisted('loadedArchetype', null);
   const [archetypeFilter, setArchetypeFilter] = useState("all");
   const [expandedArchetype, setExpandedArchetype] = useState(null);
 
